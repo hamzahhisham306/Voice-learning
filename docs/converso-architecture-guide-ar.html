@@ -1,0 +1,726 @@
+<title>كونفيرسو — دليل البنية والشيفرة</title>
+
+<style>
+  :root {
+    --bg: #fbfaf8;
+    --surface: #ffffff;
+    --surface-2: #f4f1ea;
+    --ink: #1b1916;
+    --ink-2: #56504a;
+    --ink-3: #8b8279;
+    --border: #e8e1d6;
+    --border-strong: #d8cfc1;
+    --accent: #fe5933;
+    --clerk: #6c47ff;
+    --supabase: #1f9d63;
+    --vapi: #0d9488;
+    --amber: #a5741d;
+    --amber-tint: #f8f1e2;
+    --code-bg: #f5f2ea;
+    --code-ink: #2b2822;
+    --kw: #b5296b;
+    --str: #1f7a4d;
+    --com: #98918a;
+    --shadow: 0 1px 2px rgba(27,25,22,.04), 0 10px 30px rgba(27,25,22,.06);
+    --sans: "SF Arabic", "Geeza Pro", "Segoe UI", Tahoma, "Noto Sans Arabic", "Arabic Typesetting", ui-sans-serif, system-ui, sans-serif;
+    --mono: "SF Mono", "JetBrains Mono", "Fira Code", ui-monospace, Menlo, Consolas, monospace;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15120d; --surface: #1d1913; --surface-2: #251f18;
+      --ink: #f1ebe1; --ink-2: #b8b0a3; --ink-3: #897f73;
+      --border: #322c22; --border-strong: #40382c;
+      --accent: #ff6f4b; --clerk: #a48bff; --supabase: #4ade9b; --vapi: #2dd4bf;
+      --amber: #d8a552; --amber-tint: #29210f;
+      --code-bg: #100e09; --code-ink: #e9e2d5;
+      --kw: #ff7ab2; --str: #6fd39b; --com: #7d746a;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 34px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg:#fbfaf8;--surface:#fff;--surface-2:#f4f1ea;--ink:#1b1916;--ink-2:#56504a;--ink-3:#8b8279;
+    --border:#e8e1d6;--border-strong:#d8cfc1;--accent:#fe5933;--clerk:#6c47ff;--supabase:#1f9d63;--vapi:#0d9488;
+    --amber:#a5741d;--amber-tint:#f8f1e2;--code-bg:#f5f2ea;--code-ink:#2b2822;--kw:#b5296b;--str:#1f7a4d;--com:#98918a;
+    --shadow:0 1px 2px rgba(27,25,22,.04),0 10px 30px rgba(27,25,22,.06);
+  }
+  :root[data-theme="dark"] {
+    --bg:#15120d;--surface:#1d1913;--surface-2:#251f18;--ink:#f1ebe1;--ink-2:#b8b0a3;--ink-3:#897f73;
+    --border:#322c22;--border-strong:#40382c;--accent:#ff6f4b;--clerk:#a48bff;--supabase:#4ade9b;--vapi:#2dd4bf;
+    --amber:#d8a552;--amber-tint:#29210f;--code-bg:#100e09;--code-ink:#e9e2d5;--kw:#ff7ab2;--str:#6fd39b;--com:#7d746a;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 12px 34px rgba(0,0,0,.4);
+  }
+
+  * { box-sizing: border-box; }
+  html { direction: rtl; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--sans); line-height: 1.9; font-size: 16.5px;
+    direction: rtl; text-align: right;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page { max-width: 880px; margin: 0 auto; padding: clamp(1.8rem,5vw,4rem) clamp(1.1rem,4vw,2rem) 6rem; }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+
+  /* code stays LTR even inside RTL text */
+  code, .tt {
+    font-family: var(--mono); font-size: .84em;
+    background: var(--code-bg); color: var(--code-ink);
+    padding: .1em .38em; border-radius: .35rem; border: 1px solid var(--border);
+    direction: ltr; unicode-bidi: isolate; text-align: left;
+  }
+
+  /* hero */
+  .hero { margin-bottom: 2.5rem; }
+  .eyebrow { display:inline-flex; align-items:center; gap:.55rem; font-size:.78rem; font-weight:700; letter-spacing:.02em; color:var(--accent); margin-bottom:1rem; }
+  .eyebrow::before { content:""; width:1.7rem; height:2px; background:var(--accent); border-radius:2px; }
+  h1.title { font-size: clamp(2rem,6vw,3rem); line-height:1.25; letter-spacing:0; margin:0 0 .7rem; text-wrap:balance; font-weight:800; }
+  .lede { font-size: clamp(1.05rem,2.4vw,1.22rem); color: var(--ink-2); max-width: 62ch; margin:0; }
+
+  /* table of contents */
+  .toc { margin: 2.5rem 0; background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1.3rem 1.5rem; box-shadow: var(--shadow); }
+  .toc h2 { font-size: .85rem; color: var(--ink-3); margin:0 0 .9rem; font-weight:700; }
+  .toc ol { margin:0; padding:0; list-style:none; counter-reset: toc; display:grid; grid-template-columns: 1fr 1fr; gap:.45rem 1.5rem; }
+  @media (max-width:640px){ .toc ol { grid-template-columns: 1fr; } }
+  .toc li { counter-increment: toc; font-size:.97rem; }
+  .toc li a { color: var(--ink); display:flex; gap:.6rem; }
+  .toc li a::before { content: counter(toc,decimal-leading-zero); font-family:var(--mono); font-size:.8rem; color:var(--accent); font-weight:700; direction:ltr; }
+
+  /* sections */
+  section.doc { margin-top: 3.4rem; scroll-margin-top: 1.5rem; }
+  .sec-num { font-family:var(--mono); font-size:.8rem; font-weight:700; color:var(--accent); letter-spacing:.05em; direction:ltr; display:inline-block; }
+  h2.sec { font-size: clamp(1.5rem,3.6vw,2rem); line-height:1.35; margin:.3rem 0 1.1rem; text-wrap:balance; font-weight:800; }
+  h3 { font-size:1.22rem; margin:2rem 0 .7rem; font-weight:700; }
+  h4 { font-size:1.04rem; margin:1.4rem 0 .5rem; font-weight:700; }
+  p { margin: .8rem 0; }
+  .doc ul, .doc ol { margin:.7rem 0; padding-inline-start:1.4rem; }
+  .doc li { margin:.4rem 0; }
+  strong { font-weight:700; }
+
+  /* service tag chips */
+  .svc { display:inline-flex; align-items:center; gap:.4rem; font-weight:700; font-size:.82em; padding:.12em .55em; border-radius:999px; border:1px solid; }
+  .svc::before { content:""; width:.5rem; height:.5rem; border-radius:50%; background: currentColor; }
+  .svc.clerk { color:var(--clerk); border-color: color-mix(in srgb, var(--clerk) 40%, transparent); background: color-mix(in srgb, var(--clerk) 10%, transparent); }
+  .svc.supabase { color:var(--supabase); border-color: color-mix(in srgb, var(--supabase) 40%, transparent); background: color-mix(in srgb, var(--supabase) 10%, transparent); }
+  .svc.vapi { color:var(--vapi); border-color: color-mix(in srgb, var(--vapi) 40%, transparent); background: color-mix(in srgb, var(--vapi) 12%, transparent); }
+
+  /* three service cards */
+  .svc-grid { display:grid; grid-template-columns: repeat(3,1fr); gap:1rem; margin:1.4rem 0; }
+  @media (max-width:720px){ .svc-grid { grid-template-columns:1fr; } }
+  .svc-card { background:var(--surface); border:1px solid var(--border); border-radius:1rem; padding:1.2rem; box-shadow:var(--shadow); border-top:3px solid var(--c); }
+  .svc-card.c-clerk { --c:var(--clerk); }
+  .svc-card.c-supabase { --c:var(--supabase); }
+  .svc-card.c-vapi { --c:var(--vapi); }
+  .svc-card h4 { margin:0 0 .3rem; color:var(--c); font-size:1.12rem; }
+  .svc-card .role { font-size:.82rem; letter-spacing:.02em; color:var(--ink-3); margin-bottom:.6rem; }
+  .svc-card p { margin:0; font-size:.95rem; color:var(--ink-2); }
+
+  /* diagram card (always light so mermaid default theme stays legible; LTR) */
+  .diagram { background:#f8f6f1; border:1px solid var(--border-strong); border-radius:1rem; padding:1.1rem; margin:1.4rem 0; overflow-x:auto; }
+  .diagram pre.mermaid { margin:0; background:transparent; border:0; text-align:center; min-width:min-content; direction:ltr; }
+  .diagram .cap { display:block; text-align:center; font-size:.86rem; color:#7a7267; margin-top:.7rem; direction:rtl; }
+
+  /* code block (LTR) */
+  .code { margin:1.2rem 0; border:1px solid var(--border); border-radius:.8rem; overflow:hidden; box-shadow:var(--shadow); direction:ltr; text-align:left; }
+  .code__bar { display:flex; align-items:center; gap:.5rem; background:var(--surface-2); border-bottom:1px solid var(--border); padding:.5rem .85rem; font-family:var(--mono); font-size:.78rem; color:var(--ink-2); }
+  .code__bar .dot { width:.7rem; height:.7rem; border-radius:50%; background:var(--border-strong); }
+  .code__bar .name { margin-inline-start:.3rem; font-weight:600; color:var(--ink); }
+  .code pre { margin:0; background:var(--code-bg); color:var(--code-ink); padding:1rem 1.1rem; overflow-x:auto; font-family:var(--mono); font-size:.82rem; line-height:1.65; direction:ltr; text-align:left; }
+  .code pre .k { color:var(--kw); }
+  .code pre .s { color:var(--str); }
+  .code pre .c { color:var(--com); font-style:italic; }
+
+  /* callouts (accent on inline-start → flips to the right in RTL) */
+  .call { border:1px solid var(--border); border-inline-start:3px solid var(--cc,var(--accent)); background:var(--surface); border-radius:.8rem; padding:1rem 1.2rem; margin:1.3rem 0; box-shadow:var(--shadow); }
+  .call .lbl { display:block; font-size:.78rem; font-weight:700; letter-spacing:.02em; margin-bottom:.35rem; color:var(--cc,var(--accent)); }
+  .call p { margin:.3rem 0; font-size:.96rem; }
+  .call.note { --cc: var(--clerk); }
+  .call.warn { --cc: var(--amber); background: var(--amber-tint); }
+  .call.key { --cc: var(--accent); }
+
+  /* tables */
+  .twrap { overflow-x:auto; margin:1.3rem 0; border:1px solid var(--border); border-radius:.8rem; }
+  table { border-collapse:collapse; width:100%; font-size:.92rem; }
+  th, td { text-align:right; padding:.6rem .85rem; border-bottom:1px solid var(--border); vertical-align:top; }
+  th { background:var(--surface-2); font-weight:700; font-size:.82rem; color:var(--ink-2); white-space:nowrap; }
+  tr:last-child td { border-bottom:0; }
+  td code { white-space:nowrap; }
+
+  /* file tree (LTR) */
+  .tree { font-family:var(--mono); font-size:.82rem; line-height:1.9; background:var(--code-bg); border:1px solid var(--border); border-radius:.8rem; padding:1rem 1.2rem; overflow-x:auto; color:var(--code-ink); direction:ltr; text-align:left; }
+  .tree .d { color:var(--accent); font-weight:700; }
+  .tree .m { color:var(--ink-3); }
+
+  hr { border:0; border-top:1px solid var(--border); margin:3rem 0 0; }
+  footer { margin-top:2rem; text-align:center; color:var(--ink-3); font-size:.86rem; }
+  .backtop { display:inline-block; margin-top:1rem; font-size:.86rem; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    section.doc { animation: fade .5s ease both; }
+    @keyframes fade { from { opacity:0; transform:translateY(8px);} to {opacity:1; transform:none;} }
+  }
+</style>
+
+<div class="page">
+
+  <header class="hero">
+    <span class="eyebrow">دليل تعليمي · شرح شامل</span>
+    <h1 class="title">كونفيرسو — دليل البنية والشيفرة</h1>
+    <p class="lede">جولة تدريجيّة تشرح كيف يتكامل هذا التطبيق المبني على Next.js: <b style="color:var(--clerk)">Clerk</b> للمصادقة والاشتراكات، و<b style="color:var(--supabase)">Supabase</b> للبيانات، و<b style="color:var(--vapi)">Vapi</b> للتدريس الصوتي اللحظي — مع شرح كل ملف ودالّة مهمّة والمسارات التي تربطها معًا.</p>
+  </header>
+
+  <nav class="toc" aria-label="جدول المحتويات">
+    <h2>محتويات الدليل</h2>
+    <ol>
+      <li><a href="#big-picture">الصورة الكاملة</a></li>
+      <li><a href="#services">الخدمات الثلاث</a></li>
+      <li><a href="#clerk">Clerk: تسجيل الدخول والتسجيل</a></li>
+      <li><a href="#supabase">شرح Supabase</a></li>
+      <li><a href="#vapi">شرح Vapi الصوتي</a></li>
+      <li><a href="#relationship">كيف تتّصل الخدمات الثلاث</a></li>
+      <li><a href="#vapi-supabase">تدفّق البيانات Vapi ↔ Supabase</a></li>
+      <li><a href="#codebase">جولة في الشيفرة</a></li>
+      <li><a href="#flows">مسارات كاملة من البداية للنهاية</a></li>
+      <li><a href="#concepts">مفاهيم أساسية والاعتماديّات</a></li>
+      <li><a href="#env">متغيّرات البيئة</a></li>
+    </ol>
+  </nav>
+
+  <!-- 1 -->
+  <section class="doc" id="big-picture">
+    <span class="sec-num">01</span>
+    <h2 class="sec">الصورة الكاملة — ما هو كونفيرسو؟</h2>
+    <p><b>كونفيرسو (Converso)</b> هو «منصّة تعليم بالذكاء الاصطناعي في الوقت الفعلي». ينشئ المستخدم <b>رفيقًا (companion)</b> — أي معلّمًا ذكيًّا — باختيار اسم وموضوع ومحور ونبرة صوت وأسلوب حديث. ثم يبدأ <b>محادثة صوتيّة حيّة</b> مع هذا المعلّم: يتحدّث بصوته، ويسمع ردودًا منطوقة، ويشاهد النص المكتوب مباشرةً. تُسجَّل الجلسات المكتملة، ويمكن حفظ الرفقاء المفضّلين في المفضّلة.</p>
+    <p>ثلاث خدمات خارجيّة، كلٌّ منها مسؤولة عن جانب واحد، والتطبيق هو الذي يربطها معًا:</p>
+    <div class="svc-grid">
+      <div class="svc-card c-clerk"><div class="role">الهويّة</div><h4>Clerk</h4><p>مَن هو المستخدم. تسجيل الدخول والتسجيل، وملفّات الجلسة (cookies)، وفوترة الاشتراكات (حدود الخطط).</p></div>
+      <div class="svc-card c-supabase"><div class="role">البيانات</div><h4>Supabase</h4><p>ما الذي يملكه المستخدم. قاعدة بيانات Postgres تُخزّن الرفقاء وسجلّ الجلسات والمفضّلة.</p></div>
+      <div class="svc-card c-vapi"><div class="role">الصوت</div><h4>Vapi</h4><p>المحادثة الحيّة. تُحوّل صوت الميكروفون إلى معلّم ذكيّ يتكلّم في الوقت الفعلي.</p></div>
+    </div>
+
+    <div class="diagram">
+      <pre class="mermaid">
+flowchart TB
+  subgraph B["🌐 Browser (client)"]
+    UI["React UI<br/>(pages &amp; components)"]
+    VSDK["Vapi Web SDK"]
+  end
+  subgraph SRV["▲ Next.js server (App Router)"]
+    MW["clerkMiddleware"]
+    RSC["Server Components"]
+    ACT["Server Actions<br/>companion.actions.ts"]
+  end
+  CLERK["🔐 Clerk<br/>Auth + Billing"]
+  SUPA["🗄️ Supabase<br/>Postgres + RLS"]
+  VAPI["🎙️ Vapi<br/>voice orchestrator"]
+  PROV["Deepgram · OpenAI · 11Labs"]
+
+  UI --> RSC
+  UI --> ACT
+  UI -. "session cookie" .-> CLERK
+  MW -. "verify session" .-> CLERK
+  RSC -- "Clerk JWT" --> SUPA
+  ACT -- "Clerk JWT" --> SUPA
+  VSDK <== "audio + events" ==> VAPI
+  VAPI --> PROV
+  VSDK -. "on call-end" .-> ACT
+      </pre>
+      <span class="cap">يلتقي كلّ شيء في مكانين: خادم Next.js (للبيانات، محميًّا بواسطة Clerk)، والمتصفّح (للمكالمة الصوتيّة الحيّة).</span>
+    </div>
+    <p>أهمّ فكرة على الإطلاق: <b>الخدمات الثلاث لا تتحدّث مع بعضها مباشرةً.</b> تطبيق Next.js هو المركز (hub). يُثبِت Clerk الهويّة، وتلك الهويّة تفتح الوصول إلى Supabase، والمتصفّح يُشغّل Vapi — ثم يُبلِّغ النتيجة إلى الخادم، الذي يكتب بدوره في Supabase.</p>
+  </section>
+
+  <!-- 2 -->
+  <section class="doc" id="services">
+    <span class="sec-num">02</span>
+    <h2 class="sec">الخدمات الثلاث في لمحة</h2>
+    <div class="twrap">
+      <table>
+        <thead><tr><th>الخدمة</th><th>الحزمة</th><th>أين تعمل</th><th>مع من تتحدّث</th></tr></thead>
+        <tbody>
+          <tr><td><span class="svc clerk">Clerk</span></td><td><code>@clerk/nextjs</code></td><td>الخادم + العميل</td><td>المتصفّح (cookies)، وخادم Next (عبر <code>auth()</code>)، وSupabase (تُصدِر الرمز JWT الذي يثق به Supabase)</td></tr>
+          <tr><td><span class="svc supabase">Supabase</span></td><td><code>@supabase/supabase-js</code></td><td>الخادم (إجراءات/مكوّنات الخادم)</td><td>خادم Next فقط — يتحقّق من رمز Clerk JWT قبل كلّ استعلام</td></tr>
+          <tr><td><span class="svc vapi">Vapi</span></td><td><code>@vapi-ai/web</code></td><td>المتصفّح فقط</td><td>سحابة Vapi عبر WebRTC؛ ويُبلِّغ خادم Next عبر إجراء خادم (Server Action)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="call key"><span class="lbl">نموذج ذهني مُبسّط</span><p><b>Clerk = جواز السفر.</b> <b>Supabase = الخزنة</b> التي تفحص جواز السفر. <b>Vapi = المكالمة الهاتفيّة</b> مع المعلّم. يُسلّم التطبيق جواز Clerk إلى Supabase في كلّ طلب، ويبدأ مكالمة Vapi وينهيها من المتصفّح.</p></div>
+  </section>
+
+  <!-- 3 -->
+  <section class="doc" id="clerk">
+    <span class="sec-num">03</span>
+    <h2 class="sec">Clerk: تسجيل الدخول والتسجيل</h2>
+    <p><b>Clerk</b> خدمة جاهزة للمصادقة وإدارة المستخدمين. بدلًا من بناء نظام تسجيل دخول وتشفير كلمات مرور وجلسات وواجهات حسابات من الصفر، تعرض مكوّنات Clerk فيتكفّل هو بكلّ ذلك — بما في ذلك «المتابعة عبر Google/GitHub»، ورموز البريد الإلكتروني، ومفاتيح المرور (passkeys)، وملفّات جلسة آمنة.</p>
+
+    <h3>الأجزاء المستخدَمة في هذا التطبيق</h3>
+    <ul>
+      <li><b><code>ClerkProvider</code></b> يُغلّف التطبيق كلّه في <code>app/layout.tsx</code>، فيجعل حالة المصادقة متاحة في كلّ مكان.</li>
+      <li><b><code>&lt;SignInButton&gt;</code> و<code>&lt;SignUpButton&gt;</code></b> في شريط التنقّل يفتحان تدفّق Clerk المستضاف. و<b><code>&lt;SignedIn&gt;</code> و<code>&lt;SignedOut&gt;</code></b> يعرضان الواجهة بشكل مشروط، و<b><code>&lt;UserButton&gt;</code></b> هو قائمة صورة الحساب.</li>
+      <li><b>المسارات الشاملة (catch-all)</b> <code>app/sign-in/[[...sign-in]]/page.tsx</code> و<code>app/sign-up/[[...sign-up]]/page.tsx</code> تستضيف صفحات تسجيل الدخول والتسجيل الكاملة. الصيغة <code>[[...x]]</code> هي «مسار شامل اختياري» تتيح لـ Clerk امتلاك كلّ المسارات الفرعيّة (كالتحقّق أو ردّ نداء SSO) تحت مسار واحد.</li>
+      <li><b><code>middleware.ts</code></b> يُشغّل <code>clerkMiddleware()</code> في كلّ طلب، فيقرأ ملفّ الجلسة ليعرف الخادم من أنت.</li>
+    </ul>
+
+    <div class="code">
+      <div class="code__bar"><span class="dot"></span><span class="name">components/Navbar.tsx</span> — أزرار المصادقة</div>
+<pre><span class="c">// غير المسجّلين يرون Sign In + Sign Up؛ المسجّلون يرون صورة حسابهم</span>
+&lt;SignedOut&gt;
+  &lt;SignInButton&gt;&lt;button className="btn-signin"&gt;Sign In&lt;/button&gt;&lt;/SignInButton&gt;
+  &lt;SignUpButton&gt;&lt;button className="btn-primary"&gt;Sign Up&lt;/button&gt;&lt;/SignUpButton&gt;
+&lt;/SignedOut&gt;
+&lt;SignedIn&gt;
+  &lt;UserButton /&gt;
+&lt;/SignedIn&gt;</pre>
+    </div>
+
+    <h3>ماذا يحدث فعليًّا (تدفّق المصادقة)</h3>
+    <p><b>التسجيل (Sign Up)</b> يُنشئ سجلّ مستخدم جديدًا تمامًا في Clerk. أمّا <b>تسجيل الدخول (Sign In)</b> فيُصادِق على مستخدم موجود. وكلاهما ينتهي بالطريقة نفسها: يضع Clerk <b>ملفّ جلسة (cookie)</b> — وهو رمز JWT موقَّع — في المتصفّح. ومن تلك اللحظة، يحمل كلّ طلب هذا الملفّ، ويستطيع الخادم استدعاء <code>auth()</code> للحصول على معرّف المستخدم.</p>
+
+    <div class="diagram">
+      <pre class="mermaid">
+sequenceDiagram
+  actor U as User
+  participant B as Browser (Next.js)
+  participant MW as clerkMiddleware
+  participant C as Clerk
+  U->>B: Click "Sign In" / "Sign Up"
+  B->>C: Open Clerk UI (hosted flow)
+  U->>C: Email + code / Google / passkey
+  C-->>B: Set session cookie (signed JWT)
+  Note over B,C: User is now authenticated
+  U->>B: Visit a protected page
+  B->>MW: Request (cookie attached)
+  MW->>C: Validate session
+  C-->>MW: Valid — userId = the "sub" claim
+  MW-->>B: Render page; auth() / currentUser() now work
+      </pre>
+      <span class="cap">تسجيل الدخول والتسجيل كلاهما ينتهي بملفّ جلسة يتحقّق منه الوسيط (middleware) في كلّ طلب.</span>
+    </div>
+
+    <h3>قراءة المستخدم على الخادم</h3>
+    <p>تُستخدَم دالّتان مساعدتان من <code>@clerk/nextjs/server</code> في كلّ أنحاء التطبيق:</p>
+    <ul>
+      <li><code>auth()</code> — خفيفة؛ تُعيد <code>{ userId, has, getToken }</code>. <b>وهي غير متزامنة (async) — انتظرها دائمًا بـ <code>await</code>.</b></li>
+      <li><code>currentUser()</code> — كائن المستخدم الكامل (الاسم، البريد، الصورة)، يُستخدَم في صفحتَي الملفّ الشخصي والدرس.</li>
+    </ul>
+    <div class="code">
+      <div class="code__bar"><span class="dot"></span><span class="name">app/companions/[id]/page.tsx</span></div>
+<pre><span class="k">const</span> user = <span class="k">await</span> currentUser();
+<span class="k">if</span> (!user) redirect(<span class="s">'/sign-in'</span>); <span class="c">// حماية: إعادة الزوّار غير المسجّلين</span></pre>
+    </div>
+
+    <h3>Clerk يتولّى الفوترة أيضًا</h3>
+    <p>صفحة <code>app/subscription/page.tsx</code> هي حرفيًّا مجرّد <code>&lt;PricingTable /&gt;</code> — وهو مكوّن من Clerk يعرض خطط الاشتراك. ثم يتحقّق التطبيق من الصلاحيّات عبر <code>has()</code> لفرض الحدود (انظر مسار «إنشاء رفيق» لاحقًا):</p>
+    <div class="code">
+      <div class="code__bar"><span class="dot"></span><span class="name">lib/actions/companion.actions.ts</span> — newCompanionPermissions()</div>
+<pre><span class="k">const</span> { userId, has } = <span class="k">await</span> auth();
+<span class="k">if</span> (has({ plan: <span class="s">'pro'</span> })) <span class="k">return</span> <span class="k">true</span>;          <span class="c">// بلا حدود</span>
+<span class="k">else if</span> (has({ feature: <span class="s">"3_companion_limit"</span> })) limit = <span class="s">3</span>;
+<span class="k">else if</span> (has({ feature: <span class="s">"10_companion_limit"</span> })) limit = <span class="s">10</span>;</pre>
+    </div>
+    <a class="backtop" href="#big-picture">↑ العودة للأعلى</a>
+  </section>
+
+  <!-- 4 -->
+  <section class="doc" id="supabase">
+    <span class="sec-num">04</span>
+    <h2 class="sec">Supabase — طبقة قاعدة البيانات</h2>
+    <p><b>Supabase</b> بديل مفتوح المصدر لـ Firebase، مبنيّ على <b>PostgreSQL</b>. تحصل على قاعدة بيانات SQL حقيقيّة مع مجموعة أدوات حولها. أبرز مزاياها:</p>
+    <ul>
+      <li><b>قاعدة بيانات Postgres</b> — SQL علائقيّ كامل، مع مفاتيح أجنبيّة وفهارس وقيود.</li>
+      <li><b>واجهة REST مولّدة تلقائيًّا (PostgREST)</b> — كلّ جدول قابل للاستعلام فورًا عبر مكتبة JS (<code>supabase.from('companions').select()</code>). لا حاجة لكتابة نقاط نهاية خلفيّة.</li>
+      <li><b>أمان مستوى الصف (RLS)</b> — قواعد وصول لكلّ صف تُفرَض <i>داخل قاعدة البيانات نفسها</i>، فلا يرى المستخدم إلّا بياناته.</li>
+      <li><b>مصادقة وتحديث لحظيّ وتخزين ودوالّ حافّة</b> — ميزات إضافيّة (هذا التطبيق يستخدم قاعدة البيانات + RLS فقط؛ فالمصادقة يتولّاها Clerk).</li>
+    </ul>
+    <p><b>حالات الاستخدام المعتادة:</b> الطبقة الخلفيّة لتطبيقات الويب والجوّال، ولوحات المعلومات، ومنتجات SaaS — أي مكان تريد فيه قاعدة Postgres مع واجهة فوريّة وتفويض مدمج، دون تشغيل خادمك الخاص.</p>
+
+    <h3>كيف يستخدم هذا التطبيق Supabase</h3>
+    <p>ثلاثة جداول (كلّ المعرّفات من نوع <code>uuid</code>؛ ومعرّف مستخدم Clerk مُخزَّن كنصّ <code>text</code>):</p>
+    <div class="twrap">
+      <table>
+        <thead><tr><th>الجدول</th><th>الأعمدة</th><th>الغرض</th></tr></thead>
+        <tbody>
+          <tr><td><code>companions</code></td><td><code>id, name, subject, topic, voice, style, duration, author, created_at</code></td><td>كلّ معلّم ذكيّ. <code>author</code> = معرّف Clerk لمن أنشأه.</td></tr>
+          <tr><td><code>session_history</code></td><td><code>id, companion_id→companions, user_id, created_at</code></td><td>صفّ واحد لكلّ درس صوتيّ مكتمل.</td></tr>
+          <tr><td><code>bookmarks</code></td><td><code>id, companion_id→companions, user_id, created_at</code></td><td>الرفقاء المحفوظون للمستخدم (فريد لكلّ مستخدم+رفيق).</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>يُبنى العميل <i>مع رمز Clerk</i> — التفصيلة الحاسمة</h3>
+    <p>هذا هو جوهر تكامل Clerk↔Supabase. في كلّ مرّة يحتاج التطبيق فيها قاعدة البيانات، يبني عميل Supabase جديدًا ويُمرّر له دالّة تُعيد رمز جلسة <b>Clerk</b> الحاليّ:</p>
+    <div class="code">
+      <div class="code__bar"><span class="dot"></span><span class="name">lib/supabase.ts</span></div>
+<pre><span class="k">import</span> { createClient } <span class="k">from</span> <span class="s">"@supabase/supabase-js"</span>;
+<span class="k">import</span> { auth } <span class="k">from</span> <span class="s">"@clerk/nextjs/server"</span>;
+
+<span class="k">export const</span> createSupabaseClient = () =&gt; {
+  <span class="k">return</span> createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      <span class="k">async</span> accessToken() {
+        <span class="c">// أعطِ Supabase رمز JWT الخاص بمستخدم Clerk المسجّل</span>
+        <span class="k">return</span> (<span class="k">await</span> auth()).getToken();
+      },
+    }
+  );
+};</pre>
+    </div>
+    <p>يستقبل Supabase ذلك الرمز، ويتحقّق منه مقابل مفاتيح Clerk العموميّة (المُعرَّفة كمزوّد <b>مصادقة طرف ثالث</b>)، ثم تستخدم سياسات RLS المطالبة <code>sub</code> في الرمز (وهي معرّف مستخدم Clerk) لتصفية الصفوف:</p>
+    <div class="code">
+      <div class="code__bar"><span class="dot"></span><span class="name">سياسة RLS (SQL)</span></div>
+<pre><span class="c">-- يستطيع المستخدم قراءة مفضّلته هو فقط</span>
+<span class="k">create policy</span> "bookmarks_select_own" <span class="k">on</span> public.bookmarks
+  <span class="k">for select to</span> authenticated
+  <span class="k">using</span> ((auth.jwt() -&gt;&gt; <span class="s">'sub'</span>) = user_id);</pre>
+    </div>
+    <div class="call note"><span class="lbl">لماذا لا نستخدم auth.uid()؟</span><p>دالّة <code>auth.uid()</code> المدمجة في Supabase تتوقّع قيمة UUID. لكنّ معرّفات مستخدمي Clerk تبدو هكذا <code>user_2abc…</code> (وليست UUID)، لذا تستخدم السياسات <code>auth.jwt() ->> 'sub'</code> لقراءة معرّف Clerk الخام كنصّ.</p></div>
+    <a class="backtop" href="#big-picture">↑ العودة للأعلى</a>
+  </section>
+
+  <!-- 5 -->
+  <section class="doc" id="vapi">
+    <span class="sec-num">05</span>
+    <h2 class="sec">Vapi الصوتي — المعلّم اللحظيّ</h2>
+    <p><b>Vapi</b> منصّة ذكاء اصطناعيّ صوتيّة. تُنسّق الأجزاء الثلاثة المتحرّكة لأيّ محادثة منطوقة كي لا تضطرّ لبنائها بنفسك:</p>
+    <ol>
+      <li><b>تحويل الكلام إلى نص (transcriber)</b> — هنا <b>Deepgram</b> (نموذج <code>nova-3</code>) يُحوّل صوت ميكروفون المستخدم إلى نصّ.</li>
+      <li><b>«العقل» (نموذج اللغة LLM)</b> — <b>OpenAI GPT-4</b> يستقبل ذلك النصّ مع <i>تعليمة نظام</i> للمعلّم فيُنتج ردًّا.</li>
+      <li><b>تحويل النص إلى كلام (voice)</b> — <b>ElevenLabs</b> (<code>11labs</code>) ينطق الردّ بالصوت المختار.</li>
+    </ol>
+    <p>والأهمّ أنّ <b>Vapi في هذا التطبيق يعمل كليًّا داخل المتصفّح</b> عبر <code>@vapi-ai/web</code>. لا دخل للخادم في المكالمة الحيّة.</p>
+
+    <div class="diagram">
+      <pre class="mermaid">
+flowchart LR
+  Mic["🎤 User speaks"] --> SDK["Vapi Web SDK<br/>(browser)"]
+  SDK == "audio" ==> VAPI["Vapi orchestrator"]
+  VAPI --> DG["Deepgram<br/>speech → text"]
+  DG --> LLM["OpenAI GPT-4<br/>tutor prompt"]
+  LLM --> TTS["ElevenLabs<br/>text → speech"]
+  TTS ==> VAPI
+  VAPI == "audio + events" ==> SDK
+  SDK --> Spk["🔊 User hears tutor"]
+  SDK -. "transcript events" .-> React["React state<br/>live transcript"]
+      </pre>
+      <span class="cap">مسار Vapi الصوتي. التطبيق يكتفي بإعداده والاستماع لأحداثه.</span>
+    </div>
+
+    <h3>إعداد المساعد</h3>
+    <p>الدالّة <code>configureAssistant(voice, style)</code> في <code>lib/utils.ts</code> تبني كائن إعداد Vapi. لاحظ العلامات النائبة <code>{{topic}}</code> و<code>{{subject}}</code> و<code>{{style}}</code> — تُملأ لحظة بدء المكالمة (انظر أدناه):</p>
+    <div class="code">
+      <div class="code__bar"><span class="dot"></span><span class="name">lib/utils.ts</span> — configureAssistant() (مقتطف)</div>
+<pre><span class="k">const</span> voiceId = voices[voice][style] || <span class="s">"sarah"</span>;   <span class="c">// اختيار صوت ElevenLabs</span>
+<span class="k">return</span> {
+  transcriber: { provider: <span class="s">"deepgram"</span>, model: <span class="s">"nova-3"</span>, language: <span class="s">"en"</span> },
+  voice:       { provider: <span class="s">"11labs"</span>, voiceId, stability: <span class="s">0.4</span>, /* … */ },
+  model: {
+    provider: <span class="s">"openai"</span>, model: <span class="s">"gpt-4"</span>,
+    messages: [{ role: <span class="s">"system"</span>, content: <span class="s">`You are a tutor teaching {{ subject }}…
+      Stick to the topic {{ topic }}. Keep your style {{ style }}. …`</span> }],
+  },
+};</pre>
+    </div>
+
+    <h3>تشغيل المكالمة: <code>components/CompanionComponent.tsx</code></h3>
+    <p>مكوّن العميل هذا هو واجهة الجلسة الحيّة بالكامل. يقوم بـ (١) بدء/إيقاف المكالمة، و(٢) الاشتراك في أحداث Vapi، و(٣) عرض النصّ والرسوم المتحرّكة. وتتحكّم آلة حالات محليّة <code>CallStatus</code> (<code>INACTIVE → CONNECTING → ACTIVE → FINISHED</code>) بالزرّ والمظهر.</p>
+    <div class="code">
+      <div class="code__bar"><span class="dot"></span><span class="name">components/CompanionComponent.tsx</span> — بدء المكالمة</div>
+<pre><span class="k">const</span> handleCall = <span class="k">async</span> () =&gt; {
+  setCallStatus(CallStatus.CONNECTING);
+  <span class="k">const</span> assistantOverrides = {
+    variableValues: { subject, topic, style },  <span class="c">// تملأ {{subject}} إلخ.</span>
+    clientMessages: [<span class="s">"transcript"</span>],           <span class="c">// إرسال النصوص إلى المتصفّح</span>
+    serverMessages: [],                          <span class="c">// لا webhooks على الخادم</span>
+  };
+  vapi.start(configureAssistant(voice, style), assistantOverrides);
+};</pre>
+    </div>
+    <div class="code">
+      <div class="code__bar"><span class="dot"></span><span class="name">components/CompanionComponent.tsx</span> — الاستماع لأحداث Vapi</div>
+<pre>vapi.on(<span class="s">'call-start'</span>, () =&gt; setCallStatus(ACTIVE));
+vapi.on(<span class="s">'call-end'</span>,   () =&gt; { setCallStatus(FINISHED); addToSessionHistory(companionId); });
+vapi.on(<span class="s">'message'</span>,    (m) =&gt; {          <span class="c">// النصّ المباشر</span>
+  <span class="k">if</span> (m.type === <span class="s">'transcript'</span> &amp;&amp; m.transcriptType === <span class="s">'final'</span>)
+    setMessages(prev =&gt; [{ role: m.role, content: m.transcript }, ...prev]);
+});
+vapi.on(<span class="s">'speech-start'</span>, () =&gt; setIsSpeaking(<span class="k">true</span>));   <span class="c">// تشغيل رسم الموجة الصوتيّة</span>
+vapi.on(<span class="s">'speech-end'</span>,   () =&gt; setIsSpeaking(<span class="k">false</span>));</pre>
+    </div>
+    <div class="call warn"><span class="lbl">ملاحظة</span><p>المكالمة الحيّة تحتاج متغيّر البيئة في المتصفّح <code>NEXT_PUBLIC_VAPI_WEB_TOKEN</code> (انظر <code>lib/vapi.sdk.ts</code>). إن لم يُضبَط، تُعرَض الصفحة لكن <code>vapi.start()</code> لن يستطيع الاتّصال. وهذا منفصل تمامًا عن Clerk/Supabase.</p></div>
+    <a class="backtop" href="#big-picture">↑ العودة للأعلى</a>
+  </section>
+
+  <!-- 6 -->
+  <section class="doc" id="relationship">
+    <span class="sec-num">06</span>
+    <h2 class="sec">كيف تتواصل Clerk وVapi وSupabase</h2>
+    <p>هي لا تتّصل في مثلّث — بل تتّصل عبر التطبيق. إليك الصورة نفسها من زاوية المسؤوليّات و«الغراء» الذي يربط كلّ زوج:</p>
+    <div class="diagram">
+      <pre class="mermaid">
+flowchart TB
+  APP(["Converso app<br/>(Next.js + Browser)"])
+  CLERK["🔐 Clerk"]
+  SUPA["🗄️ Supabase"]
+  VAPI["🎙️ Vapi"]
+  APP -- "auth() · cookies · has()" --- CLERK
+  APP -- "supabase.from(...)<br/>server actions" --- SUPA
+  APP -- "vapi.start/stop · events" --- VAPI
+  CLERK == "issues JWT that<br/>Supabase verifies (Third-Party Auth)" ==&gt; SUPA
+      </pre>
+      <span class="cap">الرابط المباشر الوحيد بين خدمتين هو Clerk → Supabase، وهو غير مباشر: يُصدِر Clerk رمزًا، وSupabase مُهيّأ للثقة به.</span>
+    </div>
+
+    <h4>Clerk ↔ Supabase (الهويّة تفتح البيانات)</h4>
+    <p>يُصدِر Clerk رمز جلسة JWT؛ وتُرفِقه <code>createSupabaseClient()</code> بكلّ استعلام؛ ويتحقّق منه Supabase عبر نطاق Clerk المُسجَّل تحت <b>مصادقة الطرف الثالث</b>، ثم تُصفّي RLS الصفوف حسب <code>sub</code>. <b>لا webhooks</b> — بل تحقّق من الرمز وقت الطلب.</p>
+
+    <h4>التطبيق ↔ Vapi (المتصفّح يقود المكالمة)</h4>
+    <p>يفتح المتصفّح مكالمة WebRTC إلى Vapi ويستمع للأحداث. Vapi لا يمسّ Supabase ولا Clerk أبدًا. وعند انتهاء المكالمة، يستدعي المتصفّح <b>إجراء خادم</b> لحفظ الجلسة.</p>
+
+    <h4>التطبيق ↔ Clerk (الهويّة + الفوترة)</h4>
+    <p><code>clerkMiddleware()</code> يتحقّق من الملفّ (cookie) في كلّ طلب؛ و<code>auth()</code>/<code>currentUser()</code> يقرآن المستخدم؛ و<code>has()</code> يفحص خطّة الاشتراك.</p>
+
+    <div class="call key"><span class="lbl">بخصوص الـ webhooks</span><p>سألتَ عن الـ webhooks. <b>هذا التطبيق لا يستخدم أيًّا منها.</b> فـ Vapi مُهيّأ بـ <code>serverMessages: []</code> (بلا نداءات خادم)، وفحوصات خطط Clerk تحدث وقت الطلب عبر <code>has()</code>. كلّ شيء إمّا <b>إجراء خادم</b> (المتصفّح → خادم Next → Supabase) أو تحقّق من رمز وقت الطلب. يمكن <i>إضافة</i> الـ webhooks لاحقًا (مثلًا <code>serverMessages</code> في Vapi لتسجيل النصوص كاملة على الخادم، أو webhooks من Clerk لمزامنة المستخدمين) — لكنّها ليست جزءًا من التصميم الحاليّ.</p></div>
+    <a class="backtop" href="#big-picture">↑ العودة للأعلى</a>
+  </section>
+
+  <!-- 7 -->
+  <section class="doc" id="vapi-supabase">
+    <span class="sec-num">07</span>
+    <h2 class="sec">Vapi ↔ Supabase: كيف تتدفّق البيانات</h2>
+    <p>لا يتحدّث Vapi وSupabase مباشرةً أبدًا. <b>المتصفّح هو الجسر</b>. أثناء المكالمة، تعيش النصوص في حالة React فقط (تُعرَض ولا تُحفَظ). وعند <b>انتهاء</b> المكالمة، يُطلِق المتصفّح إجراء خادم يكتب صفًّا <i>واحدًا</i> في <code>session_history</code>.</p>
+    <div class="diagram">
+      <pre class="mermaid">
+sequenceDiagram
+  actor U as User
+  participant CC as CompanionComponent (browser)
+  participant V as Vapi (cloud)
+  participant SA as addToSessionHistory (server action)
+  participant S as Supabase
+  U->>CC: Click "Start Session"
+  CC->>V: vapi.start(assistant, { variableValues })
+  V-->>CC: 'call-start' → status ACTIVE
+  loop during the lesson
+    U->>V: speaks (mic audio)
+    V-->>CC: 'message' transcript → append to React state
+    V-->>CC: 'speech-start' / 'speech-end' → animate soundwave
+  end
+  U->>CC: Click "End Session"
+  CC->>V: vapi.stop()
+  V-->>CC: 'call-end'
+  CC->>SA: addToSessionHistory(companionId)
+  SA->>SA: userId = (await auth()).userId
+  SA->>S: insert session_history { companion_id, user_id }
+  S-->>SA: ok (RLS: sub === user_id)
+      </pre>
+      <span class="cap">البيانات الوحيدة من Vapi التي تصل إلى Supabase هي: «هذا المستخدم أكمل جلسة مع هذا الرفيق».</span>
+    </div>
+    <div class="code">
+      <div class="code__bar"><span class="dot"></span><span class="name">lib/actions/companion.actions.ts</span> — addToSessionHistory()</div>
+<pre><span class="k">export const</span> addToSessionHistory = <span class="k">async</span> (companionId) =&gt; {
+  <span class="k">const</span> { userId } = <span class="k">await</span> auth();               <span class="c">// معرّف Clerk</span>
+  <span class="k">const</span> supabase = createSupabaseClient();        <span class="c">// يحمل رمز Clerk JWT</span>
+  <span class="k">await</span> supabase.from(<span class="s">'session_history'</span>).insert({
+    companion_id: companionId,
+    user_id: userId,
+  });
+};</pre>
+    </div>
+    <p>هذا السجلّ الواحد يُغذّي «<b>الدروس المكتملة</b>» و«<b>الجلسات الأخيرة</b>» و«الجلسات المكتملة مؤخّرًا» في الصفحة الرئيسيّة — وكلّها تُقرأ عبر <code>getRecentSessions()</code> / <code>getUserSessions()</code>، اللتين تستخدمان <b>تضمينًا</b> عبر مفتاح Postgres الأجنبيّ لجلب الرفيق الكامل لكلّ جلسة:</p>
+    <div class="code">
+      <div class="code__bar"><span class="dot"></span><span class="name">getUserSessions() — القراءة مع التضمين</span></div>
+<pre>supabase
+  .from(<span class="s">'session_history'</span>)
+  .select(<span class="s">`companions:companion_id (*)`</span>)  <span class="c">// تتبّع المفتاح الأجنبي → الرفيق الكامل</span>
+  .eq(<span class="s">'user_id'</span>, userId)
+  .order(<span class="s">'created_at'</span>, { ascending: <span class="k">false</span> });</pre>
+    </div>
+    <div class="call note"><span class="lbl">لماذا كان المفتاح الأجنبيّ مهمًّا</span><p>ذلك التضمين <code>companions:companion_id (*)</code> يعمل فقط لأنّ لدى <code>session_history.companion_id</code> <b>مفتاحًا أجنبيًّا</b> يشير إلى <code>companions(id)</code>. والأمر نفسه ينطبق على <code>bookmarks</code>. غياب هذا المفتاح هو سبب تعطّل <code>/my-journey</code> حتى أُنشئت الجداول بالشكل الصحيح.</p></div>
+    <a class="backtop" href="#big-picture">↑ العودة للأعلى</a>
+  </section>
+
+  <!-- 8 -->
+  <section class="doc" id="codebase">
+    <span class="sec-num">08</span>
+    <h2 class="sec">جولة في الشيفرة</h2>
+    <p>في موجّه App Router بـ Next.js: المجلّدات تحت <code>app/</code> هي المسارات؛ و<code>page.tsx</code> هي الصفحة؛ و<code>layout.tsx</code> يُغلّف الأبناء؛ و<code>loading.tsx</code> هو الهيكل العظمي (skeleton) الذي يظهر فورًا أثناء تحميل بيانات الصفحة.</p>
+    <div class="tree">
+<span class="d">app/</span>
+  layout.tsx            <span class="m"># التخطيط الجذر: ClerkProvider + Navbar + خطوط</span>
+  page.tsx              <span class="m"># الرئيسية: الرفقاء الأكثر شيوعًا + الجلسات الأخيرة + CTA</span>
+  loading.tsx           <span class="m"># هيكل تحميل عام</span>
+  <span class="d">companions/</span>
+    page.tsx            <span class="m"># المكتبة: قائمة + SearchInput + SubjectFilter</span>
+    loading.tsx         <span class="m"># هيكل شبكة</span>
+    <span class="d">[id]/</span>page.tsx       <span class="m"># صفحة الدرس → تعرض CompanionComponent</span>
+    <span class="d">new/</span>page.tsx        <span class="m"># إنشاء رفيق (مقيّد بحدّ الخطة)</span>
+  <span class="d">my-journey/</span>page.tsx  <span class="m"># الملف الشخصي: المفضّلة، الجلسات، رفقائي</span>
+  <span class="d">subscription/</span>page.tsx<span class="m"># PricingTable من Clerk</span>
+  <span class="d">sign-in/</span>[[...sign-in]]/page.tsx   <span class="m"># تسجيل دخول Clerk</span>
+  <span class="d">sign-up/</span>[[...sign-up]]/page.tsx   <span class="m"># تسجيل Clerk</span>
+<span class="d">components/</span>
+  Navbar.tsx · NavItems.tsx        <span class="m"># التنقّل + أزرار المصادقة</span>
+  CompanionCard.tsx · CompanionsList.tsx  <span class="m"># عرض الرفقاء</span>
+  CompanionForm.tsx                <span class="m"># نموذج الإنشاء (react-hook-form + zod)</span>
+  CompanionComponent.tsx           <span class="m"># ⭐ الجلسة الصوتيّة الحيّة (Vapi)</span>
+  SearchInput.tsx · SubjectFilter.tsx    <span class="m"># بحث/تصفية عبر معطيات الرابط</span>
+<span class="d">lib/</span>
+  supabase.ts           <span class="m"># createSupabaseClient() مع رمز Clerk</span>
+  vapi.sdk.ts           <span class="m"># عميل Vapi في المتصفّح</span>
+  utils.ts              <span class="m"># cn(), getSubjectColor(), configureAssistant()</span>
+  <span class="d">actions/</span>companion.actions.ts  <span class="m"># ⭐ كلّ الوصول للبيانات (إجراءات خادم)</span>
+<span class="d">constants/</span>index.ts    <span class="m"># subjects, colors, voices</span>
+<span class="d">types/</span>index.d.ts     <span class="m"># أنواع TypeScript العامّة</span>
+middleware.ts           <span class="m"># clerkMiddleware()</span>
+next.config.ts          <span class="m"># غلاف Sentry + مضيفو الصور</span>
+.env / .env.local       <span class="m"># مفاتيح Clerk / Supabase / Vapi</span>
+    </div>
+
+    <h3>طبقة البيانات: <code>lib/actions/companion.actions.ts</code></h3>
+    <p>كلّ دالّة هنا تبدأ بـ <code>'use server'</code> — هذه <b>إجراءات خادم (Server Actions)</b>: دوالّ آمنة تعمل على الخادم، ويمكن استدعاؤها من مكوّنات العميل. هذا الملفّ الواحد هو «واجهة برمجة» التطبيق بأكملها.</p>
+    <div class="twrap">
+      <table>
+        <thead><tr><th>الدالّة</th><th>ماذا تفعل</th></tr></thead>
+        <tbody>
+          <tr><td><code>createCompanion(data)</code></td><td>إدراج رفيق جديد مع <code>author = userId</code>.</td></tr>
+          <tr><td><code>getAllCompanions({subject,topic,…})</code></td><td>سرد الرفقاء مع بحث/تصفية وترقيم اختياريّ. تُغذّي الرئيسيّة والمكتبة.</td></tr>
+          <tr><td><code>getCompanion(id)</code></td><td>جلب رفيق واحد لصفحة الدرس.</td></tr>
+          <tr><td><code>addToSessionHistory(companionId)</code></td><td>تسجيل جلسة مكتملة (تُستدعى عند حدث <code>call-end</code> من Vapi).</td></tr>
+          <tr><td><code>getRecentSessions() · getUserSessions(userId)</code></td><td>قراءة الجلسات (مع تضمين الرفيق).</td></tr>
+          <tr><td><code>getUserCompanions(userId)</code></td><td>الرفقاء الذين أنشأهم المستخدم (رحلتي).</td></tr>
+          <tr><td><code>newCompanionPermissions()</code></td><td>فرض حدّ الخطة عبر <code>has()</code> من Clerk.</td></tr>
+          <tr><td><code>addBookmark · removeBookmark · getBookmarkedCompanions</code></td><td>عمليّات المفضّلة؛ و<code>revalidatePath()</code> تُحدّث الصفحة بعد أيّ تغيير.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>الصفحات والمكوّنات في سطر لكلّ منها</h3>
+    <ul>
+      <li><b><code>app/layout.tsx</code></b> — يُغلّف كلّ شيء بـ <code>&lt;ClerkProvider&gt;</code> (بمظهر العلامة البرتقاليّ) ويعرض <code>&lt;Navbar /&gt;</code>. هنا تعيش المصادقة والخطوط وأنماط CSS العامّة.</li>
+      <li><b><code>app/page.tsx</code></b> — الرئيسيّة. تجلب أبرز الرفقاء والجلسات الأخيرة <i>على التوازي</i>، وتعرض بطاقات <code>CompanionCard</code> وجدول <code>CompanionsList</code> ومكوّن <code>CTA</code>.</li>
+      <li><b><code>app/companions/page.tsx</code></b> — المكتبة. تقرأ <code>searchParams</code> على الخادم للتصفية، وتعرض صندوق البحث وقائمة المواضيع.</li>
+      <li><b><code>app/companions/[id]/page.tsx</code></b> — تحمّل الرفيق والمستخدم الحاليّ، ثم تعرض نجم العرض: <code>&lt;CompanionComponent /&gt;</code>.</li>
+      <li><b><code>app/companions/new/page.tsx</code></b> — تستدعي <code>newCompanionPermissions()</code>؛ وتعرض النموذج أو شاشة «ترقية الخطة».</li>
+      <li><b><code>app/my-journey/page.tsx</code></b> — الملفّ الشخصي؛ تجلب الرفقاء والجلسات والمفضّلة على التوازي وتسردها في أكورديونات.</li>
+      <li><b><code>CompanionCard / CompanionsList</code></b> — عرضيّة؛ كلٌّ منها يرتبط بـ <code>/companions/{id}</code>. وتضمّ البطاقة أيضًا زرّ المفضّلة.</li>
+      <li><b><code>CompanionForm</code></b> — نموذج مُتحقَّق منه بـ <code>react-hook-form</code> + <code>zod</code> يستدعي <code>createCompanion</code> ثم ينتقل إلى الدرس الجديد.</li>
+      <li><b><code>SearchInput / SubjectFilter</code></b> — مكوّنات عميل تدفع معطيات الاستعلام إلى الرابط (<code>?topic=…&amp;subject=…</code>)، فيُعاد تشغيل مكوّن الخادم بتصفية جديدة.</li>
+    </ul>
+    <a class="backtop" href="#big-picture">↑ العودة للأعلى</a>
+  </section>
+
+  <!-- 9 -->
+  <section class="doc" id="flows">
+    <span class="sec-num">09</span>
+    <h2 class="sec">مسارات كاملة (أمثلة عمليّة)</h2>
+
+    <h3>مثال أ — إنشاء رفيق</h3>
+    <div class="diagram">
+      <pre class="mermaid">
+sequenceDiagram
+  actor U as User
+  participant P as /companions/new (server)
+  participant Perm as newCompanionPermissions
+  participant Cl as Clerk (has plan/feature)
+  participant F as CompanionForm (client)
+  participant SA as createCompanion (server action)
+  participant S as Supabase
+  U->>P: Visit "New Companion"
+  P->>Perm: check limit
+  Perm->>Cl: has({plan:'pro'}) / has({feature})
+  Cl-->>Perm: entitlements
+  alt under limit
+    P-->>U: Show form
+    U->>F: Fill + submit (zod validates)
+    F->>SA: createCompanion(values)
+    SA->>S: insert companions { …, author: userId }
+    S-->>SA: new companion row
+    SA-->>F: companion
+    F->>U: router.push('/companions/{id}')
+  else limit reached
+    P-->>U: "Upgrade your plan" → /subscription
+  end
+      </pre>
+    </div>
+
+    <h3>مثال ب — تشغيل درس صوتيّ</h3>
+    <ol>
+      <li>يفتح المستخدم <code>/companions/{id}</code>. يحمّل الخادم الرفيق ومستخدم Clerk، ثم يعرض <code>CompanionComponent</code> مع خصائصه (<code>subject, topic, voice, style, userName…</code>).</li>
+      <li>ينقر المستخدم <b>Start Session</b> → <code>vapi.start(configureAssistant(voice,style), { variableValues })</code>. الحالة → <b>CONNECTING</b>.</li>
+      <li>يُطلق Vapi حدث <code>call-start</code> → الحالة <b>ACTIVE</b>. يُحيّي المعلّم المستخدم؛ وتعمل Deepgram/GPT-4/11Labs في حلقة.</li>
+      <li>تتدفّق أحداث <code>message</code> → يُضاف كلّ نصّ نهائيّ إلى المحادثة على الشاشة. و<code>speech-start/end</code> يبدّلان رسم الموجة الصوتيّة.</li>
+      <li>ينقر المستخدم <b>End Session</b> → <code>vapi.stop()</code> → <code>call-end</code> → تكتب <code>addToSessionHistory(companionId)</code> في Supabase.</li>
+    </ol>
+
+    <h3>مثال ج — الحفظ في المفضّلة (ولماذا تتحدّث الصفحة)</h3>
+    <p>النقر على أيقونة المفضّلة في البطاقة يستدعي <code>addBookmark(companionId, pathname)</code>. تُدرِج صفًّا، ثم تستدعي <code>revalidatePath(pathname)</code> فيُعيد Next.js جلب مكوّن الخادم، وتعكس الواجهة الحالة الجديدة. وتضمن RLS أنّ <code>user_id</code> في الصفّ يجب أن يساوي معرّف Clerk للمُستدعي.</p>
+    <a class="backtop" href="#big-picture">↑ العودة للأعلى</a>
+  </section>
+
+  <!-- 10 -->
+  <section class="doc" id="concepts">
+    <span class="sec-num">10</span>
+    <h2 class="sec">مفاهيم أساسية والاعتماديّات</h2>
+
+    <h4>مكوّنات الخادم مقابل مكوّنات العميل</h4>
+    <p>افتراضيًّا، ملفّات App Router هي <b>مكوّنات خادم (Server Components)</b> — تعمل على الخادم، ويمكن أن تكون <code>async</code>، وتصل إلى Supabase/Clerk مباشرةً (مثاليّة لصفحات جلب البيانات). أمّا الملفّ الذي يحتاج واجهات المتصفّح أو الحالة أو معالِجات الأحداث فيبدأ بـ <code>'use client'</code> (مثل <code>CompanionComponent</code> و<code>CompanionForm</code> و<code>SearchInput</code>). ولا بدّ أن يكون Vapi مكوّن عميل لأنّه يستخدم الميكروفون.</p>
+
+    <h4>إجراءات الخادم (Server Actions)</h4>
+    <p>الملفّات المُعلَّمة بـ <code>'use server'</code> تُتيح دوالّ يستدعيها العميل كأنّها <code>await</code> عاديّة، لكنّها تُنفَّذ على الخادم. هكذا يُشغّل المتصفّح كتابات قاعدة البيانات بأمان (مثل <code>addToSessionHistory</code> و<code>createCompanion</code>) دون كشف بيانات اعتماد قاعدة البيانات.</p>
+
+    <h4>أمان مستوى الصف (RLS)</h4>
+    <p>التفويض يعيش <i>داخل Postgres</i>، لا في شيفرة التطبيق فقط. حتى لو نسي استعلامٌ إضافة <code>.eq('user_id', …)</code>، فستظلّ RLS تقصر الصفوف على المستخدم الحاليّ. وترتكز السياسات على مطالبة Clerk <code>sub</code>.</p>
+
+    <div class="twrap">
+      <table>
+        <thead><tr><th>الاعتماديّة</th><th>لماذا هي موجودة</th></tr></thead>
+        <tbody>
+          <tr><td><code>next</code> / <code>react</code></td><td>إطار العمل (App Router، مكوّنات/إجراءات الخادم) ومكتبة الواجهة.</td></tr>
+          <tr><td><code>@clerk/nextjs</code></td><td>مكوّنات المصادقة، و<code>auth()</code>/<code>currentUser()</code>، والوسيط، والفوترة (<code>PricingTable</code>).</td></tr>
+          <tr><td><code>@supabase/supabase-js</code></td><td>عميل Postgres/PostgREST المُستخدَم في إجراءات الخادم.</td></tr>
+          <tr><td><code>@vapi-ai/web</code></td><td>مكتبة المتصفّح للمكالمة الصوتيّة الحيّة.</td></tr>
+          <tr><td><code>react-hook-form</code> + <code>zod</code> + <code>@hookform/resolvers</code></td><td>حالة النموذج + التحقّق بالمخطّط لباني الرفيق.</td></tr>
+          <tr><td><code>lottie-react</code></td><td>رسم الموجة الصوتيّة المتحرّك أثناء كلام المعلّم (<code>soundwaves.json</code>).</td></tr>
+          <tr><td><code>tailwindcss</code> + shadcn/ui (<code>@radix-ui/*</code>)</td><td>التنسيق وعناصر واجهة سهلة الوصول (Select, Accordion, Table, Form).</td></tr>
+          <tr><td><code>@sentry/nextjs</code></td><td>مراقبة الأخطاء (يُغلّف <code>next.config.ts</code>).</td></tr>
+          <tr><td><code>@jsmastery/utils</code></td><td>دوالّ <code>formUrlQuery</code> لمعطيات البحث/التصفية في الرابط.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="call warn"><span class="lbl">مصيدة في next.config.ts</span><p>يضبط الإعداد <code>typescript.ignoreBuildErrors: true</code> و<code>eslint.ignoreDuringBuilds: true</code>. أي أنّ بناء الإنتاج لن يفشل بسبب أخطاء الأنواع أو الـ lint — مريح، لكنّه يعني أيضًا أنّ <code>tsc</code>/lint لن يلتقطا الأخطاء وقت البناء. شغّلهما يدويًّا.</p></div>
+    <a class="backtop" href="#big-picture">↑ العودة للأعلى</a>
+  </section>
+
+  <!-- 11 -->
+  <section class="doc" id="env">
+    <span class="sec-num">11</span>
+    <h2 class="sec">مرجع متغيّرات البيئة</h2>
+    <p>المتغيّرات التي تبدأ بـ <code>NEXT_PUBLIC_</code> مكشوفة للمتصفّح (مفاتيح عموميّة آمنة). وكلّ ما عداها للخادم فقط (سرّيّ).</p>
+    <div class="twrap">
+      <table>
+        <thead><tr><th>المتغيّر</th><th>يستخدمه</th><th>أين</th></tr></thead>
+        <tbody>
+          <tr><td><code>NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY</code></td><td>عميل <span class="svc clerk">Clerk</span></td><td><code>.env</code></td></tr>
+          <tr><td><code>CLERK_SECRET_KEY</code></td><td>خادم <span class="svc clerk">Clerk</span> (سرّيّ)</td><td><code>.env</code></td></tr>
+          <tr><td><code>NEXT_PUBLIC_CLERK_SIGN_IN_URL</code> / <code>…SIGN_UP_URL</code></td><td>إعداد مسارات Clerk</td><td><code>.env</code></td></tr>
+          <tr><td><code>NEXT_PUBLIC_SUPABASE_URL</code></td><td>رابط مشروع <span class="svc supabase">Supabase</span></td><td><code>.env.local</code></td></tr>
+          <tr><td><code>NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</code></td><td>مفتاح واجهة <span class="svc supabase">Supabase</span></td><td><code>.env.local</code></td></tr>
+          <tr><td><code>NEXT_PUBLIC_VAPI_WEB_TOKEN</code></td><td>عميل <span class="svc vapi">Vapi</span> في المتصفّح</td><td><code>.env</code> (مطلوب للصوت)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="call key"><span class="lbl">خطوة في لوحة التحكّم ليست في الشيفرة</span><p>كي يثق Supabase برموز Clerk، يُسجَّل Clerk كـ <b>مزوّد مصادقة طرف ثالث</b> في لوحة Supabase (باستخدام نطاق Clerk، مثل <code>sure-piranha-43.clerk.accounts.dev</code>)، ويُفعَّل تكامل Supabase في لوحة Clerk. هذا الإعداد هو ما يجعل سلسلة Clerk→Supabase كلّها تعمل — ولا يظهر منه شيء في المستودع.</p></div>
+  </section>
+
+  <hr>
+  <footer>
+    دليل بنية كونفيرسو · Next.js (App Router) + Clerk + Supabase + Vapi<br>
+    اقرأه من الأعلى إلى الأسفل لتتعلّم المشروع من الصفر.
+  </footer>
+
+</div>

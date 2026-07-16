@@ -1,0 +1,722 @@
+<title>Converso — Architecture & Codebase Guide</title>
+
+<style>
+  :root {
+    --bg: #fbfaf8;
+    --surface: #ffffff;
+    --surface-2: #f4f1ea;
+    --ink: #1b1916;
+    --ink-2: #56504a;
+    --ink-3: #8b8279;
+    --border: #e8e1d6;
+    --border-strong: #d8cfc1;
+    --accent: #fe5933;
+    --clerk: #6c47ff;
+    --supabase: #1f9d63;
+    --vapi: #0d9488;
+    --amber: #a5741d;
+    --amber-tint: #f8f1e2;
+    --code-bg: #f5f2ea;
+    --code-ink: #2b2822;
+    --kw: #b5296b;
+    --str: #1f7a4d;
+    --com: #98918a;
+    --shadow: 0 1px 2px rgba(27,25,22,.04), 0 10px 30px rgba(27,25,22,.06);
+    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: "SF Mono", "JetBrains Mono", "Fira Code", ui-monospace, Menlo, Consolas, monospace;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15120d; --surface: #1d1913; --surface-2: #251f18;
+      --ink: #f1ebe1; --ink-2: #b8b0a3; --ink-3: #897f73;
+      --border: #322c22; --border-strong: #40382c;
+      --accent: #ff6f4b; --clerk: #a48bff; --supabase: #4ade9b; --vapi: #2dd4bf;
+      --amber: #d8a552; --amber-tint: #29210f;
+      --code-bg: #100e09; --code-ink: #e9e2d5;
+      --kw: #ff7ab2; --str: #6fd39b; --com: #7d746a;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 34px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg:#fbfaf8;--surface:#fff;--surface-2:#f4f1ea;--ink:#1b1916;--ink-2:#56504a;--ink-3:#8b8279;
+    --border:#e8e1d6;--border-strong:#d8cfc1;--accent:#fe5933;--clerk:#6c47ff;--supabase:#1f9d63;--vapi:#0d9488;
+    --amber:#a5741d;--amber-tint:#f8f1e2;--code-bg:#f5f2ea;--code-ink:#2b2822;--kw:#b5296b;--str:#1f7a4d;--com:#98918a;
+    --shadow:0 1px 2px rgba(27,25,22,.04),0 10px 30px rgba(27,25,22,.06);
+  }
+  :root[data-theme="dark"] {
+    --bg:#15120d;--surface:#1d1913;--surface-2:#251f18;--ink:#f1ebe1;--ink-2:#b8b0a3;--ink-3:#897f73;
+    --border:#322c22;--border-strong:#40382c;--accent:#ff6f4b;--clerk:#a48bff;--supabase:#4ade9b;--vapi:#2dd4bf;
+    --amber:#d8a552;--amber-tint:#29210f;--code-bg:#100e09;--code-ink:#e9e2d5;--kw:#ff7ab2;--str:#6fd39b;--com:#7d746a;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 12px 34px rgba(0,0,0,.4);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--sans); line-height: 1.7; font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page { max-width: 880px; margin: 0 auto; padding: clamp(1.8rem,5vw,4rem) clamp(1.1rem,4vw,2rem) 6rem; }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+
+  code, .tt {
+    font-family: var(--mono); font-size: .86em;
+    background: var(--code-bg); color: var(--code-ink);
+    padding: .1em .38em; border-radius: .35rem; border: 1px solid var(--border);
+  }
+
+  /* hero */
+  .hero { margin-bottom: 2.5rem; }
+  .eyebrow { display:inline-flex; align-items:center; gap:.55rem; font-size:.76rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin-bottom:1rem; }
+  .eyebrow::before { content:""; width:1.7rem; height:2px; background:var(--accent); border-radius:2px; }
+  h1.title { font-size: clamp(2rem,6vw,3rem); line-height:1.1; letter-spacing:-.02em; margin:0 0 .7rem; text-wrap:balance; font-weight:800; }
+  .lede { font-size: clamp(1.05rem,2.4vw,1.22rem); color: var(--ink-2); max-width: 62ch; margin:0; }
+
+  /* table of contents */
+  .toc { margin: 2.5rem 0; background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1.3rem 1.5rem; box-shadow: var(--shadow); }
+  .toc h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-3); margin:0 0 .9rem; }
+  .toc ol { margin:0; padding:0; list-style:none; counter-reset: toc; display:grid; grid-template-columns: 1fr 1fr; gap:.45rem 1.5rem; }
+  @media (max-width:640px){ .toc ol { grid-template-columns: 1fr; } }
+  .toc li { counter-increment: toc; font-size:.95rem; }
+  .toc li a { color: var(--ink); display:flex; gap:.6rem; }
+  .toc li a::before { content: counter(toc,decimal-leading-zero); font-family:var(--mono); font-size:.8rem; color:var(--accent); font-weight:700; }
+
+  /* sections */
+  section.doc { margin-top: 3.4rem; scroll-margin-top: 1.5rem; }
+  .sec-num { font-family:var(--mono); font-size:.8rem; font-weight:700; color:var(--accent); letter-spacing:.05em; }
+  h2.sec { font-size: clamp(1.5rem,3.6vw,2rem); line-height:1.2; letter-spacing:-.015em; margin:.3rem 0 1.1rem; text-wrap:balance; font-weight:800; }
+  h3 { font-size:1.2rem; margin:2rem 0 .7rem; font-weight:700; letter-spacing:-.01em; }
+  h4 { font-size:1.02rem; margin:1.4rem 0 .5rem; font-weight:700; }
+  p { margin: .8rem 0; }
+  .doc ul, .doc ol { margin:.7rem 0; padding-inline-start:1.4rem; }
+  .doc li { margin:.4rem 0; }
+  strong { font-weight:700; }
+
+  /* service tag chips */
+  .svc { display:inline-flex; align-items:center; gap:.4rem; font-weight:700; font-size:.82em; padding:.12em .55em; border-radius:999px; border:1px solid; }
+  .svc::before { content:""; width:.5rem; height:.5rem; border-radius:50%; background: currentColor; }
+  .svc.clerk { color:var(--clerk); border-color: color-mix(in srgb, var(--clerk) 40%, transparent); background: color-mix(in srgb, var(--clerk) 10%, transparent); }
+  .svc.supabase { color:var(--supabase); border-color: color-mix(in srgb, var(--supabase) 40%, transparent); background: color-mix(in srgb, var(--supabase) 10%, transparent); }
+  .svc.vapi { color:var(--vapi); border-color: color-mix(in srgb, var(--vapi) 40%, transparent); background: color-mix(in srgb, var(--vapi) 12%, transparent); }
+
+  /* three service cards */
+  .svc-grid { display:grid; grid-template-columns: repeat(3,1fr); gap:1rem; margin:1.4rem 0; }
+  @media (max-width:720px){ .svc-grid { grid-template-columns:1fr; } }
+  .svc-card { background:var(--surface); border:1px solid var(--border); border-radius:1rem; padding:1.2rem; box-shadow:var(--shadow); border-top:3px solid var(--c); }
+  .svc-card.c-clerk { --c:var(--clerk); }
+  .svc-card.c-supabase { --c:var(--supabase); }
+  .svc-card.c-vapi { --c:var(--vapi); }
+  .svc-card h4 { margin:0 0 .3rem; color:var(--c); font-size:1.1rem; }
+  .svc-card .role { font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-3); margin-bottom:.6rem; }
+  .svc-card p { margin:0; font-size:.92rem; color:var(--ink-2); }
+
+  /* diagram card (always light so mermaid default theme stays legible) */
+  .diagram { background:#f8f6f1; border:1px solid var(--border-strong); border-radius:1rem; padding:1.1rem; margin:1.4rem 0; overflow-x:auto; }
+  .diagram pre.mermaid { margin:0; background:transparent; border:0; text-align:center; min-width:min-content; }
+  .diagram .cap { display:block; text-align:center; font-size:.82rem; color:#7a7267; margin-top:.7rem; font-style:italic; }
+
+  /* code block */
+  .code { margin:1.2rem 0; border:1px solid var(--border); border-radius:.8rem; overflow:hidden; box-shadow:var(--shadow); }
+  .code__bar { display:flex; align-items:center; gap:.5rem; background:var(--surface-2); border-bottom:1px solid var(--border); padding:.5rem .85rem; font-family:var(--mono); font-size:.78rem; color:var(--ink-2); }
+  .code__bar .dot { width:.7rem; height:.7rem; border-radius:50%; background:var(--border-strong); }
+  .code__bar .name { margin-inline-start:.3rem; font-weight:600; color:var(--ink); }
+  .code pre { margin:0; background:var(--code-bg); color:var(--code-ink); padding:1rem 1.1rem; overflow-x:auto; font-family:var(--mono); font-size:.82rem; line-height:1.65; }
+  .code pre .k { color:var(--kw); }
+  .code pre .s { color:var(--str); }
+  .code pre .c { color:var(--com); font-style:italic; }
+
+  /* callouts */
+  .call { border:1px solid var(--border); border-inline-start:3px solid var(--cc,var(--accent)); background:var(--surface); border-radius:.3rem .8rem .8rem .3rem; padding:1rem 1.2rem; margin:1.3rem 0; box-shadow:var(--shadow); }
+  .call .lbl { display:block; font-size:.74rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; margin-bottom:.35rem; color:var(--cc,var(--accent)); }
+  .call p { margin:.3rem 0; font-size:.95rem; }
+  .call.note { --cc: var(--clerk); }
+  .call.warn { --cc: var(--amber); background: var(--amber-tint); }
+  .call.key { --cc: var(--accent); }
+
+  /* tables */
+  .twrap { overflow-x:auto; margin:1.3rem 0; border:1px solid var(--border); border-radius:.8rem; }
+  table { border-collapse:collapse; width:100%; font-size:.9rem; }
+  th, td { text-align:left; padding:.6rem .8rem; border-bottom:1px solid var(--border); vertical-align:top; }
+  th { background:var(--surface-2); font-weight:700; font-size:.78rem; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-2); white-space:nowrap; }
+  tr:last-child td { border-bottom:0; }
+  td code { white-space:nowrap; }
+
+  /* file tree */
+  .tree { font-family:var(--mono); font-size:.82rem; line-height:1.9; background:var(--code-bg); border:1px solid var(--border); border-radius:.8rem; padding:1rem 1.2rem; overflow-x:auto; color:var(--code-ink); }
+  .tree .d { color:var(--accent); font-weight:700; }
+  .tree .m { color:var(--ink-3); }
+
+  hr { border:0; border-top:1px solid var(--border); margin:3rem 0 0; }
+  footer { margin-top:2rem; text-align:center; color:var(--ink-3); font-size:.82rem; }
+  .backtop { display:inline-block; margin-top:1rem; font-size:.82rem; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    section.doc { animation: fade .5s ease both; }
+    @keyframes fade { from { opacity:0; transform:translateY(8px);} to {opacity:1; transform:none;} }
+  }
+</style>
+
+<div class="page">
+
+  <header class="hero">
+    <span class="eyebrow">Learning Guide · Full walkthrough</span>
+    <h1 class="title">Converso — Architecture &amp; Codebase Guide</h1>
+    <p class="lede">A step-by-step tour of how this Next.js app fits together: <b style="color:var(--clerk)">Clerk</b> for auth &amp; billing, <b style="color:var(--supabase)">Supabase</b> for data, and <b style="color:var(--vapi)">Vapi</b> for real-time voice tutoring — plus every important file, function, and the flows that connect them.</p>
+  </header>
+
+  <nav class="toc" aria-label="Table of contents">
+    <h2>What's inside</h2>
+    <ol>
+      <li><a href="#big-picture">The big picture</a></li>
+      <li><a href="#services">The three services</a></li>
+      <li><a href="#clerk">Clerk: Sign In &amp; Sign Up</a></li>
+      <li><a href="#supabase">Supabase explained</a></li>
+      <li><a href="#vapi">Vapi Voice explained</a></li>
+      <li><a href="#relationship">How the three connect</a></li>
+      <li><a href="#vapi-supabase">Vapi ↔ Supabase data flow</a></li>
+      <li><a href="#codebase">Codebase walkthrough</a></li>
+      <li><a href="#flows">End-to-end flows</a></li>
+      <li><a href="#concepts">Key concepts &amp; deps</a></li>
+      <li><a href="#env">Environment variables</a></li>
+    </ol>
+  </nav>
+
+  <!-- 1 -->
+  <section class="doc" id="big-picture">
+    <span class="sec-num">01</span>
+    <h2 class="sec">The big picture — what is Converso?</h2>
+    <p><b>Converso</b> is a “real-time AI teaching platform.” A user creates an AI <b>companion</b> (a tutor) by choosing a name, subject, topic, voice, and speaking style. They then start a <b>live voice conversation</b> with that tutor — talking out loud, hearing spoken replies, and watching a live transcript. Completed sessions are recorded, and favourite companions can be bookmarked.</p>
+    <p>Three external services each own one responsibility, and the app glues them together:</p>
+    <div class="svc-grid">
+      <div class="svc-card c-clerk"><div class="role">Identity</div><h4>Clerk</h4><p>Who the user is. Sign in / sign up, session cookies, and subscription billing (plan limits).</p></div>
+      <div class="svc-card c-supabase"><div class="role">Data</div><h4>Supabase</h4><p>What the user has. A Postgres database storing companions, session history, and bookmarks.</p></div>
+      <div class="svc-card c-vapi"><div class="role">Voice</div><h4>Vapi</h4><p>The live conversation. Turns microphone audio into a spoken AI tutor in real time.</p></div>
+    </div>
+
+    <div class="diagram">
+      <pre class="mermaid">
+flowchart TB
+  subgraph B["🌐 Browser (client)"]
+    UI["React UI<br/>(pages &amp; components)"]
+    VSDK["Vapi Web SDK"]
+  end
+  subgraph SRV["▲ Next.js server (App Router)"]
+    MW["clerkMiddleware"]
+    RSC["Server Components"]
+    ACT["Server Actions<br/>companion.actions.ts"]
+  end
+  CLERK["🔐 Clerk<br/>Auth + Billing"]
+  SUPA["🗄️ Supabase<br/>Postgres + RLS"]
+  VAPI["🎙️ Vapi<br/>voice orchestrator"]
+  PROV["Deepgram · OpenAI · 11Labs"]
+
+  UI --> RSC
+  UI --> ACT
+  UI -. "session cookie" .-> CLERK
+  MW -. "verify session" .-> CLERK
+  RSC -- "Clerk JWT" --> SUPA
+  ACT -- "Clerk JWT" --> SUPA
+  VSDK <== "audio + events" ==> VAPI
+  VAPI --> PROV
+  VSDK -. "on call-end" .-> ACT
+      </pre>
+      <span class="cap">Everything meets in two places: the Next.js server (for data, guarded by Clerk) and the browser (for the live voice call).</span>
+    </div>
+    <p>The single most important idea: <b>the three services never talk to each other directly.</b> The Next.js app is the hub. Clerk proves identity, that identity unlocks Supabase, and the browser drives Vapi — then reports the result back to the server, which writes to Supabase.</p>
+  </section>
+
+  <!-- 2 -->
+  <section class="doc" id="services">
+    <span class="sec-num">02</span>
+    <h2 class="sec">The three services at a glance</h2>
+    <div class="twrap">
+      <table>
+        <thead><tr><th>Service</th><th>Package</th><th>Runs where</th><th>Talks to</th></tr></thead>
+        <tbody>
+          <tr><td><span class="svc clerk">Clerk</span></td><td><code>@clerk/nextjs</code></td><td>Server + client</td><td>Browser (cookies), Next server (<code>auth()</code>), and Supabase (issues the JWT Supabase trusts)</td></tr>
+          <tr><td><span class="svc supabase">Supabase</span></td><td><code>@supabase/supabase-js</code></td><td>Server (server actions/components)</td><td>Next server only — it verifies the Clerk JWT before every query</td></tr>
+          <tr><td><span class="svc vapi">Vapi</span></td><td><code>@vapi-ai/web</code></td><td>Browser only</td><td>The Vapi cloud over WebRTC; reports back to the Next server via a server action</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="call key"><span class="lbl">Mental model</span><p><b>Clerk = the passport.</b> <b>Supabase = the vault</b> that checks the passport. <b>Vapi = the phone call</b> to the tutor. The app hands Clerk’s passport to Supabase on every request, and starts/ends the Vapi call from the browser.</p></div>
+  </section>
+
+  <!-- 3 -->
+  <section class="doc" id="clerk">
+    <span class="sec-num">03</span>
+    <h2 class="sec">Clerk: Sign In &amp; Sign Up</h2>
+    <p><b>Clerk</b> is a drop-in authentication and user-management service. Instead of building your own login, password hashing, OAuth, sessions, and account UI, you render Clerk’s components and it handles all of it — including “Continue with Google/GitHub,” email codes, passkeys, and secure session cookies.</p>
+
+    <h3>The pieces in this app</h3>
+    <ul>
+      <li><b><code>ClerkProvider</code></b> wraps the whole app in <code>app/layout.tsx</code>, making auth state available everywhere.</li>
+      <li><b><code>&lt;SignInButton&gt;</code> / <code>&lt;SignUpButton&gt;</code></b> in the navbar open Clerk’s hosted flow. <b><code>&lt;SignedIn&gt;</code> / <code>&lt;SignedOut&gt;</code></b> conditionally show UI, and <b><code>&lt;UserButton&gt;</code></b> is the profile avatar menu.</li>
+      <li><b>Catch-all routes</b> <code>app/sign-in/[[...sign-in]]/page.tsx</code> and <code>app/sign-up/[[...sign-up]]/page.tsx</code> host the full sign-in/sign-up pages. The <code>[[...x]]</code> is an <i>optional catch-all</i> so Clerk can own every sub-path (e.g. verification, SSO callback) under one route.</li>
+      <li><b><code>middleware.ts</code></b> runs <code>clerkMiddleware()</code> on every request, reading the session cookie so the server knows who you are.</li>
+    </ul>
+
+    <div class="code">
+      <div class="code__bar"><span class="dot"></span><span class="name">components/Navbar.tsx</span> — auth controls</div>
+<pre><span class="c">// Signed-out users see Sign In + Sign Up; signed-in users see their avatar</span>
+&lt;SignedOut&gt;
+  &lt;SignInButton&gt;&lt;button className="btn-signin"&gt;Sign In&lt;/button&gt;&lt;/SignInButton&gt;
+  &lt;SignUpButton&gt;&lt;button className="btn-primary"&gt;Sign Up&lt;/button&gt;&lt;/SignUpButton&gt;
+&lt;/SignedOut&gt;
+&lt;SignedIn&gt;
+  &lt;UserButton /&gt;
+&lt;/SignedIn&gt;</pre>
+    </div>
+
+    <h3>What actually happens (the auth flow)</h3>
+    <p><b>Sign Up</b> creates a brand-new user record in Clerk. <b>Sign In</b> authenticates an existing user. Both end the same way: Clerk sets a <b>session cookie</b> (a signed JWT) in the browser. From then on, every request carries that cookie, and the server can call <code>auth()</code> to get the user’s ID.</p>
+
+    <div class="diagram">
+      <pre class="mermaid">
+sequenceDiagram
+  actor U as User
+  participant B as Browser (Next.js)
+  participant MW as clerkMiddleware
+  participant C as Clerk
+  U->>B: Click "Sign In" / "Sign Up"
+  B->>C: Open Clerk UI (hosted flow)
+  U->>C: Email + code / Google / passkey
+  C-->>B: Set session cookie (signed JWT)
+  Note over B,C: User is now authenticated
+  U->>B: Visit a protected page
+  B->>MW: Request (cookie attached)
+  MW->>C: Validate session
+  C-->>MW: Valid — userId = the "sub" claim
+  MW-->>B: Render page; auth() / currentUser() now work
+      </pre>
+      <span class="cap">Sign in / sign up both result in a session cookie the middleware validates on every request.</span>
+    </div>
+
+    <h3>Reading the user on the server</h3>
+    <p>Two helpers from <code>@clerk/nextjs/server</code> are used throughout:</p>
+    <ul>
+      <li><code>auth()</code> — lightweight; returns <code>{ userId, has, getToken }</code>. <b>It is async — always <code>await</code> it.</b></li>
+      <li><code>currentUser()</code> — the full user object (name, email, image), used on the profile/lesson pages.</li>
+    </ul>
+    <div class="code">
+      <div class="code__bar"><span class="dot"></span><span class="name">app/companions/[id]/page.tsx</span></div>
+<pre><span class="k">const</span> user = <span class="k">await</span> currentUser();
+<span class="k">if</span> (!user) redirect(<span class="s">'/sign-in'</span>); <span class="c">// guard: bounce anonymous users</span></pre>
+    </div>
+
+    <h3>Clerk also does billing</h3>
+    <p>The <code>app/subscription/page.tsx</code> page is literally just <code>&lt;PricingTable /&gt;</code> — a Clerk component that renders subscription plans. The app then checks entitlements with <code>has()</code> to enforce limits (see the “create companion” flow later):</p>
+    <div class="code">
+      <div class="code__bar"><span class="dot"></span><span class="name">lib/actions/companion.actions.ts</span> — newCompanionPermissions()</div>
+<pre><span class="k">const</span> { userId, has } = <span class="k">await</span> auth();
+<span class="k">if</span> (has({ plan: <span class="s">'pro'</span> })) <span class="k">return</span> <span class="k">true</span>;          <span class="c">// unlimited</span>
+<span class="k">else if</span> (has({ feature: <span class="s">"3_companion_limit"</span> })) limit = <span class="s">3</span>;
+<span class="k">else if</span> (has({ feature: <span class="s">"10_companion_limit"</span> })) limit = <span class="s">10</span>;</pre>
+    </div>
+    <a class="backtop" href="#big-picture">↑ back to top</a>
+  </section>
+
+  <!-- 4 -->
+  <section class="doc" id="supabase">
+    <span class="sec-num">04</span>
+    <h2 class="sec">Supabase — the database layer</h2>
+    <p><b>Supabase</b> is an open-source “Firebase alternative” built on <b>PostgreSQL</b>. You get a real SQL database plus a set of tools around it. Its main features:</p>
+    <ul>
+      <li><b>Postgres database</b> — full relational SQL, foreign keys, indexes, constraints.</li>
+      <li><b>Auto-generated REST API (PostgREST)</b> — every table is instantly queryable via the JS client (<code>supabase.from('companions').select()</code>). No backend endpoints to write.</li>
+      <li><b>Row-Level Security (RLS)</b> — per-row access rules enforced <i>inside the database</i>, so users only see their own data.</li>
+      <li><b>Auth, Realtime, Storage, Edge Functions</b> — extra features (this app uses only the database + RLS; Clerk handles auth instead).</li>
+    </ul>
+    <p><b>Typical use cases:</b> the backend for web/mobile apps, dashboards, SaaS products — anywhere you want a Postgres database with an instant API and built-in authorization, without running your own server.</p>
+
+    <h3>How this app uses Supabase</h3>
+    <p>Three tables (all IDs are <code>uuid</code>; the Clerk user id is stored as <code>text</code>):</p>
+    <div class="twrap">
+      <table>
+        <thead><tr><th>Table</th><th>Columns</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><code>companions</code></td><td><code>id, name, subject, topic, voice, style, duration, author, created_at</code></td><td>Each AI tutor. <code>author</code> = the Clerk id of who created it.</td></tr>
+          <tr><td><code>session_history</code></td><td><code>id, companion_id→companions, user_id, created_at</code></td><td>One row per completed voice lesson.</td></tr>
+          <tr><td><code>bookmarks</code></td><td><code>id, companion_id→companions, user_id, created_at</code></td><td>A user’s saved companions (unique per user+companion).</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>The client is built <i>with the Clerk token</i> — the crucial detail</h3>
+    <p>This is the heart of the Clerk↔Supabase integration. Every time the app needs the database, it builds a fresh Supabase client and hands it a function that returns the current <b>Clerk</b> session token:</p>
+    <div class="code">
+      <div class="code__bar"><span class="dot"></span><span class="name">lib/supabase.ts</span></div>
+<pre><span class="k">import</span> { createClient } <span class="k">from</span> <span class="s">"@supabase/supabase-js"</span>;
+<span class="k">import</span> { auth } <span class="k">from</span> <span class="s">"@clerk/nextjs/server"</span>;
+
+<span class="k">export const</span> createSupabaseClient = () =&gt; {
+  <span class="k">return</span> createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      <span class="k">async</span> accessToken() {
+        <span class="c">// Give Supabase the logged-in user's Clerk JWT</span>
+        <span class="k">return</span> (<span class="k">await</span> auth()).getToken();
+      },
+    }
+  );
+};</pre>
+    </div>
+    <p>Supabase receives that JWT, verifies it against Clerk’s public keys (configured as a <b>Third-Party Auth provider</b>), and then RLS policies use the token’s <code>sub</code> claim (the Clerk user id) to filter rows:</p>
+    <div class="code">
+      <div class="code__bar"><span class="dot"></span><span class="name">RLS policy (SQL)</span></div>
+<pre><span class="c">-- a user can only read their own bookmarks</span>
+<span class="k">create policy</span> "bookmarks_select_own" <span class="k">on</span> public.bookmarks
+  <span class="k">for select to</span> authenticated
+  <span class="k">using</span> ((auth.jwt() -&gt;&gt; <span class="s">'sub'</span>) = user_id);</pre>
+    </div>
+    <div class="call note"><span class="lbl">Why not auth.uid()?</span><p>Supabase’s built-in <code>auth.uid()</code> expects a UUID. Clerk user ids look like <code>user_2abc…</code> (not a UUID), so the policies use <code>auth.jwt() ->> 'sub'</code> to read the raw Clerk id as text.</p></div>
+    <a class="backtop" href="#big-picture">↑ back to top</a>
+  </section>
+
+  <!-- 5 -->
+  <section class="doc" id="vapi">
+    <span class="sec-num">05</span>
+    <h2 class="sec">Vapi Voice — the real-time tutor</h2>
+    <p><b>Vapi</b> is a voice-AI platform. It orchestrates the three moving parts of a spoken conversation so you don’t have to wire them yourself:</p>
+    <ol>
+      <li><b>Speech-to-text (transcriber)</b> — here <b>Deepgram</b> (<code>nova-3</code>) turns the user’s microphone audio into text.</li>
+      <li><b>The “brain” (LLM)</b> — <b>OpenAI GPT-4</b> receives that text plus a <i>tutor system prompt</i> and produces a reply.</li>
+      <li><b>Text-to-speech (voice)</b> — <b>ElevenLabs</b> (<code>11labs</code>) speaks the reply in the chosen voice.</li>
+    </ol>
+    <p>Crucially, in this app <b>Vapi runs entirely in the browser</b> via <code>@vapi-ai/web</code>. There is no server involved in the live call.</p>
+
+    <div class="diagram">
+      <pre class="mermaid">
+flowchart LR
+  Mic["🎤 User speaks"] --> SDK["Vapi Web SDK<br/>(browser)"]
+  SDK == "audio" ==> VAPI["Vapi orchestrator"]
+  VAPI --> DG["Deepgram<br/>speech → text"]
+  DG --> LLM["OpenAI GPT-4<br/>tutor prompt"]
+  LLM --> TTS["ElevenLabs<br/>text → speech"]
+  TTS ==> VAPI
+  VAPI == "audio + events" ==> SDK
+  SDK --> Spk["🔊 User hears tutor"]
+  SDK -. "transcript events" .-> React["React state<br/>live transcript"]
+      </pre>
+      <span class="cap">The Vapi voice pipeline. The app only configures it and listens for events.</span>
+    </div>
+
+    <h3>Configuring the assistant</h3>
+    <p><code>configureAssistant(voice, style)</code> in <code>lib/utils.ts</code> builds the Vapi config object. Note the <code>{{topic}}</code>, <code>{{subject}}</code>, <code>{{style}}</code> placeholders — these are filled in at call time (see below):</p>
+    <div class="code">
+      <div class="code__bar"><span class="dot"></span><span class="name">lib/utils.ts</span> — configureAssistant() (excerpt)</div>
+<pre><span class="k">const</span> voiceId = voices[voice][style] || <span class="s">"sarah"</span>;   <span class="c">// pick an ElevenLabs voice</span>
+<span class="k">return</span> {
+  transcriber: { provider: <span class="s">"deepgram"</span>, model: <span class="s">"nova-3"</span>, language: <span class="s">"en"</span> },
+  voice:       { provider: <span class="s">"11labs"</span>, voiceId, stability: <span class="s">0.4</span>, /* … */ },
+  model: {
+    provider: <span class="s">"openai"</span>, model: <span class="s">"gpt-4"</span>,
+    messages: [{ role: <span class="s">"system"</span>, content: <span class="s">`You are a tutor teaching {{ subject }}…
+      Stick to the topic {{ topic }}. Keep your style {{ style }}. …`</span> }],
+  },
+};</pre>
+    </div>
+
+    <h3>Driving the call: <code>components/CompanionComponent.tsx</code></h3>
+    <p>This client component is the entire live-session UI. It (1) starts/stops the call, (2) subscribes to Vapi events, and (3) renders the transcript + animations. A local <code>CallStatus</code> state machine (<code>INACTIVE → CONNECTING → ACTIVE → FINISHED</code>) drives the button and visuals.</p>
+    <div class="code">
+      <div class="code__bar"><span class="dot"></span><span class="name">components/CompanionComponent.tsx</span> — starting the call</div>
+<pre><span class="k">const</span> handleCall = <span class="k">async</span> () =&gt; {
+  setCallStatus(CallStatus.CONNECTING);
+  <span class="k">const</span> assistantOverrides = {
+    variableValues: { subject, topic, style },  <span class="c">// fills {{subject}} etc.</span>
+    clientMessages: [<span class="s">"transcript"</span>],           <span class="c">// send transcripts to the browser</span>
+    serverMessages: [],                          <span class="c">// no server webhooks</span>
+  };
+  vapi.start(configureAssistant(voice, style), assistantOverrides);
+};</pre>
+    </div>
+    <div class="code">
+      <div class="code__bar"><span class="dot"></span><span class="name">components/CompanionComponent.tsx</span> — listening to Vapi events</div>
+<pre>vapi.on(<span class="s">'call-start'</span>, () =&gt; setCallStatus(ACTIVE));
+vapi.on(<span class="s">'call-end'</span>,   () =&gt; { setCallStatus(FINISHED); addToSessionHistory(companionId); });
+vapi.on(<span class="s">'message'</span>,    (m) =&gt; {          <span class="c">// live transcript</span>
+  <span class="k">if</span> (m.type === <span class="s">'transcript'</span> &amp;&amp; m.transcriptType === <span class="s">'final'</span>)
+    setMessages(prev =&gt; [{ role: m.role, content: m.transcript }, ...prev]);
+});
+vapi.on(<span class="s">'speech-start'</span>, () =&gt; setIsSpeaking(<span class="k">true</span>));   <span class="c">// play soundwave animation</span>
+vapi.on(<span class="s">'speech-end'</span>,   () =&gt; setIsSpeaking(<span class="k">false</span>));</pre>
+    </div>
+    <div class="call warn"><span class="lbl">Note</span><p>The live call needs the browser env var <code>NEXT_PUBLIC_VAPI_WEB_TOKEN</code> (see <code>lib/vapi.sdk.ts</code>). If it’s not set, the page still renders but <code>vapi.start()</code> can’t connect. This is separate from Clerk/Supabase.</p></div>
+    <a class="backtop" href="#big-picture">↑ back to top</a>
+  </section>
+
+  <!-- 6 -->
+  <section class="doc" id="relationship">
+    <span class="sec-num">06</span>
+    <h2 class="sec">How Clerk, Vapi &amp; Supabase communicate</h2>
+    <p>They don’t connect in a triangle — they connect through the app. Here’s the same picture as responsibilities and the “glue” between each pair:</p>
+    <div class="diagram">
+      <pre class="mermaid">
+flowchart TB
+  APP(["Converso app<br/>(Next.js + Browser)"])
+  CLERK["🔐 Clerk"]
+  SUPA["🗄️ Supabase"]
+  VAPI["🎙️ Vapi"]
+  APP -- "auth() · cookies · has()" --- CLERK
+  APP -- "supabase.from(...)<br/>server actions" --- SUPA
+  APP -- "vapi.start/stop · events" --- VAPI
+  CLERK == "issues JWT that<br/>Supabase verifies (Third-Party Auth)" ==&gt; SUPA
+      </pre>
+      <span class="cap">The only direct link between two services is Clerk → Supabase, and it’s indirect: Clerk mints a token, Supabase is <i>configured</i> to trust it.</span>
+    </div>
+
+    <h4>Clerk ↔ Supabase (identity unlocks data)</h4>
+    <p>Clerk mints a session JWT; <code>createSupabaseClient()</code> attaches it to every query; Supabase verifies it via the Clerk domain registered under <b>Third-Party Auth</b>, then RLS filters rows by <code>sub</code>. <b>No webhooks</b> — it’s request-time token verification.</p>
+
+    <h4>App ↔ Vapi (the browser drives the call)</h4>
+    <p>The browser opens a WebRTC call to Vapi and listens for events. Vapi never touches Supabase or Clerk. When the call ends, the browser calls a <b>server action</b> to persist the session.</p>
+
+    <h4>App ↔ Clerk (identity + billing)</h4>
+    <p><code>clerkMiddleware()</code> validates the cookie on each request; <code>auth()</code>/<code>currentUser()</code> read the user; <code>has()</code> checks the subscription plan.</p>
+
+    <div class="call key"><span class="lbl">About webhooks</span><p>You asked about webhooks. <b>This app doesn’t use any.</b> Vapi is configured with <code>serverMessages: []</code> (no server callbacks), and Clerk’s plan checks happen at request time via <code>has()</code>. Everything is either a <b>server action</b> (browser → Next server → Supabase) or a request-time token check. Webhooks <i>could</i> be added later (e.g. Vapi <code>serverMessages</code> to log full transcripts server-side, or Clerk webhooks to sync users) — but they aren’t part of the current design.</p></div>
+    <a class="backtop" href="#big-picture">↑ back to top</a>
+  </section>
+
+  <!-- 7 -->
+  <section class="doc" id="vapi-supabase">
+    <span class="sec-num">07</span>
+    <h2 class="sec">Vapi ↔ Supabase: how data flows</h2>
+    <p>Vapi and Supabase never speak directly. The <b>browser is the bridge</b>. During a call, transcripts live only in React state (they’re shown, not saved). When the call <b>ends</b>, the browser fires a server action that writes <i>one</i> row to <code>session_history</code>.</p>
+    <div class="diagram">
+      <pre class="mermaid">
+sequenceDiagram
+  actor U as User
+  participant CC as CompanionComponent (browser)
+  participant V as Vapi (cloud)
+  participant SA as addToSessionHistory (server action)
+  participant S as Supabase
+  U->>CC: Click "Start Session"
+  CC->>V: vapi.start(assistant, { variableValues })
+  V-->>CC: 'call-start' → status ACTIVE
+  loop during the lesson
+    U->>V: speaks (mic audio)
+    V-->>CC: 'message' transcript → append to React state
+    V-->>CC: 'speech-start' / 'speech-end' → animate soundwave
+  end
+  U->>CC: Click "End Session"
+  CC->>V: vapi.stop()
+  V-->>CC: 'call-end'
+  CC->>SA: addToSessionHistory(companionId)
+  SA->>SA: userId = (await auth()).userId
+  SA->>S: insert session_history { companion_id, user_id }
+  S-->>SA: ok (RLS: sub === user_id)
+      </pre>
+      <span class="cap">The only Vapi data that reaches Supabase is “this user completed a session with this companion.”</span>
+    </div>
+    <div class="code">
+      <div class="code__bar"><span class="dot"></span><span class="name">lib/actions/companion.actions.ts</span> — addToSessionHistory()</div>
+<pre><span class="k">export const</span> addToSessionHistory = <span class="k">async</span> (companionId) =&gt; {
+  <span class="k">const</span> { userId } = <span class="k">await</span> auth();               <span class="c">// Clerk id</span>
+  <span class="k">const</span> supabase = createSupabaseClient();        <span class="c">// carries the Clerk JWT</span>
+  <span class="k">await</span> supabase.from(<span class="s">'session_history'</span>).insert({
+    companion_id: companionId,
+    user_id: userId,
+  });
+};</pre>
+    </div>
+    <p>That single record powers “<b>Lessons completed</b>,” “<b>Recent Sessions</b>,” and the home page’s “Recently completed sessions” — all read back with <code>getRecentSessions()</code> / <code>getUserSessions()</code>, which use a Postgres foreign-key <b>embed</b> to pull the full companion for each session:</p>
+    <div class="code">
+      <div class="code__bar"><span class="dot"></span><span class="name">getUserSessions() — reading back with an embed</span></div>
+<pre>supabase
+  .from(<span class="s">'session_history'</span>)
+  .select(<span class="s">`companions:companion_id (*)`</span>)  <span class="c">// follow the FK → full companion</span>
+  .eq(<span class="s">'user_id'</span>, userId)
+  .order(<span class="s">'created_at'</span>, { ascending: <span class="k">false</span> });</pre>
+    </div>
+    <div class="call note"><span class="lbl">Why the foreign key mattered</span><p>That <code>companions:companion_id (*)</code> embed only works because <code>session_history.companion_id</code> has a <b>foreign key</b> to <code>companions(id)</code>. The same is true for <code>bookmarks</code>. Missing that FK is why <code>/my-journey</code> crashed until the tables were created correctly.</p></div>
+    <a class="backtop" href="#big-picture">↑ back to top</a>
+  </section>
+
+  <!-- 8 -->
+  <section class="doc" id="codebase">
+    <span class="sec-num">08</span>
+    <h2 class="sec">Codebase walkthrough</h2>
+    <p>Next.js App Router: folders under <code>app/</code> are routes; <code>page.tsx</code> is the page; <code>layout.tsx</code> wraps children; <code>loading.tsx</code> is the instant skeleton shown while a page’s data loads.</p>
+    <div class="tree">
+<span class="d">app/</span>
+  layout.tsx            <span class="m"># root layout: ClerkProvider + Navbar + fonts</span>
+  page.tsx              <span class="m"># Home: popular companions + recent sessions + CTA</span>
+  loading.tsx           <span class="m"># global loading skeleton</span>
+  <span class="d">companions/</span>
+    page.tsx            <span class="m"># Library: list + SearchInput + SubjectFilter</span>
+    loading.tsx         <span class="m"># grid skeleton</span>
+    <span class="d">[id]/</span>page.tsx       <span class="m"># Lesson page → renders CompanionComponent</span>
+    <span class="d">new/</span>page.tsx        <span class="m"># Create companion (gated by plan limit)</span>
+  <span class="d">my-journey/</span>page.tsx  <span class="m"># Profile: bookmarks, sessions, my companions</span>
+  <span class="d">subscription/</span>page.tsx<span class="m"># Clerk &lt;PricingTable /&gt;</span>
+  <span class="d">sign-in/</span>[[...sign-in]]/page.tsx   <span class="m"># Clerk sign-in</span>
+  <span class="d">sign-up/</span>[[...sign-up]]/page.tsx   <span class="m"># Clerk sign-up</span>
+<span class="d">components/</span>
+  Navbar.tsx · NavItems.tsx        <span class="m"># nav + auth buttons</span>
+  CompanionCard.tsx · CompanionsList.tsx  <span class="m"># display companions</span>
+  CompanionForm.tsx                <span class="m"># create form (react-hook-form + zod)</span>
+  CompanionComponent.tsx           <span class="m"># ⭐ the live voice session (Vapi)</span>
+  SearchInput.tsx · SubjectFilter.tsx    <span class="m"># URL-param search/filter</span>
+<span class="d">lib/</span>
+  supabase.ts           <span class="m"># createSupabaseClient() with Clerk token</span>
+  vapi.sdk.ts           <span class="m"># the Vapi browser client</span>
+  utils.ts              <span class="m"># cn(), getSubjectColor(), configureAssistant()</span>
+  <span class="d">actions/</span>companion.actions.ts  <span class="m"># ⭐ all data access (server actions)</span>
+<span class="d">constants/</span>index.ts    <span class="m"># subjects, colors, voices</span>
+<span class="d">types/</span>index.d.ts     <span class="m"># global TS types</span>
+middleware.ts           <span class="m"># clerkMiddleware()</span>
+next.config.ts          <span class="m"># Sentry wrapper + image hosts</span>
+.env / .env.local       <span class="m"># Clerk / Supabase / Vapi keys</span>
+    </div>
+
+    <h3>The data layer: <code>lib/actions/companion.actions.ts</code></h3>
+    <p>Every file here starts with <code>'use server'</code> — these are <b>Server Actions</b> (secure functions that run on the server, callable from client components). This one file is the app’s entire “API.”</p>
+    <div class="twrap">
+      <table>
+        <thead><tr><th>Function</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>createCompanion(data)</code></td><td>Insert a new companion with <code>author = userId</code>.</td></tr>
+          <tr><td><code>getAllCompanions({subject,topic,…})</code></td><td>List companions with optional search/filter + pagination. Powers Home &amp; Library.</td></tr>
+          <tr><td><code>getCompanion(id)</code></td><td>Fetch one companion for the lesson page.</td></tr>
+          <tr><td><code>addToSessionHistory(companionId)</code></td><td>Record a completed session (called on Vapi <code>call-end</code>).</td></tr>
+          <tr><td><code>getRecentSessions() · getUserSessions(userId)</code></td><td>Read sessions back (with the companion embed).</td></tr>
+          <tr><td><code>getUserCompanions(userId)</code></td><td>Companions the user created (My Journey).</td></tr>
+          <tr><td><code>newCompanionPermissions()</code></td><td>Enforce the plan limit via Clerk <code>has()</code>.</td></tr>
+          <tr><td><code>addBookmark · removeBookmark · getBookmarkedCompanions</code></td><td>Bookmark CRUD; <code>revalidatePath()</code> refreshes the page after a change.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Pages &amp; components in one line each</h3>
+    <ul>
+      <li><b><code>app/layout.tsx</code></b> — wraps everything in <code>&lt;ClerkProvider&gt;</code> (with the orange brand appearance) and renders the <code>&lt;Navbar /&gt;</code>. This is where auth + fonts + global CSS live.</li>
+      <li><b><code>app/page.tsx</code></b> — Home. Fetches top companions + recent sessions <i>in parallel</i>, renders <code>CompanionCard</code>s, a <code>CompanionsList</code> table, and the <code>CTA</code>.</li>
+      <li><b><code>app/companions/page.tsx</code></b> — the Library. Reads <code>searchParams</code> (server-side) to filter; renders the search box and subject dropdown.</li>
+      <li><b><code>app/companions/[id]/page.tsx</code></b> — loads the companion + current user, then renders the star of the show: <code>&lt;CompanionComponent /&gt;</code>.</li>
+      <li><b><code>app/companions/new/page.tsx</code></b> — calls <code>newCompanionPermissions()</code>; shows the form or an “upgrade” screen.</li>
+      <li><b><code>app/my-journey/page.tsx</code></b> — the profile; fetches companions/sessions/bookmarks in parallel and lists them in accordions.</li>
+      <li><b><code>CompanionCard / CompanionsList</code></b> — presentational; each links to <code>/companions/{id}</code>. The card also has the bookmark toggle.</li>
+      <li><b><code>CompanionForm</code></b> — a <code>react-hook-form</code> + <code>zod</code> validated form that calls <code>createCompanion</code> then routes to the new lesson.</li>
+      <li><b><code>SearchInput / SubjectFilter</code></b> — client components that push query params to the URL (<code>?topic=…&amp;subject=…</code>), which re-runs the server component with new filters.</li>
+    </ul>
+    <a class="backtop" href="#big-picture">↑ back to top</a>
+  </section>
+
+  <!-- 9 -->
+  <section class="doc" id="flows">
+    <span class="sec-num">09</span>
+    <h2 class="sec">End-to-end flows (worked examples)</h2>
+
+    <h3>Example A — Creating a companion</h3>
+    <div class="diagram">
+      <pre class="mermaid">
+sequenceDiagram
+  actor U as User
+  participant P as /companions/new (server)
+  participant Perm as newCompanionPermissions
+  participant Cl as Clerk (has plan/feature)
+  participant F as CompanionForm (client)
+  participant SA as createCompanion (server action)
+  participant S as Supabase
+  U->>P: Visit "New Companion"
+  P->>Perm: check limit
+  Perm->>Cl: has({plan:'pro'}) / has({feature})
+  Cl-->>Perm: entitlements
+  alt under limit
+    P-->>U: Show form
+    U->>F: Fill + submit (zod validates)
+    F->>SA: createCompanion(values)
+    SA->>S: insert companions { …, author: userId }
+    S-->>SA: new companion row
+    SA-->>F: companion
+    F->>U: router.push('/companions/{id}')
+  else limit reached
+    P-->>U: "Upgrade your plan" → /subscription
+  end
+      </pre>
+    </div>
+
+    <h3>Example B — Running a voice lesson</h3>
+    <ol>
+      <li>User opens <code>/companions/{id}</code>. The server loads the companion and the Clerk user, then renders <code>CompanionComponent</code> with props (<code>subject, topic, voice, style, userName…</code>).</li>
+      <li>User clicks <b>Start Session</b> → <code>vapi.start(configureAssistant(voice,style), { variableValues })</code>. Status → <b>CONNECTING</b>.</li>
+      <li>Vapi fires <code>call-start</code> → status <b>ACTIVE</b>. The tutor greets the user; Deepgram/GPT-4/11Labs run in a loop.</li>
+      <li><code>message</code> events stream in → each final transcript is prepended to the on-screen conversation. <code>speech-start/end</code> toggle the soundwave animation.</li>
+      <li>User clicks <b>End Session</b> → <code>vapi.stop()</code> → <code>call-end</code> → <code>addToSessionHistory(companionId)</code> writes to Supabase.</li>
+    </ol>
+
+    <h3>Example C — Bookmarking (and why the page refreshes)</h3>
+    <p>Clicking the bookmark on a card calls <code>addBookmark(companionId, pathname)</code>. It inserts a row, then calls <code>revalidatePath(pathname)</code> so Next.js re-fetches the server component and the UI reflects the new state. RLS guarantees the row’s <code>user_id</code> must equal the caller’s Clerk id.</p>
+    <a class="backtop" href="#big-picture">↑ back to top</a>
+  </section>
+
+  <!-- 10 -->
+  <section class="doc" id="concepts">
+    <span class="sec-num">10</span>
+    <h2 class="sec">Key concepts &amp; dependencies</h2>
+
+    <h4>Server Components vs. Client Components</h4>
+    <p>By default, App Router files are <b>Server Components</b> — they run on the server, can be <code>async</code>, and can hit Supabase/Clerk directly (great for data-loading pages). A file that needs browser APIs, state, or event handlers starts with <code>'use client'</code> (e.g. <code>CompanionComponent</code>, <code>CompanionForm</code>, <code>SearchInput</code>). Vapi <i>must</i> be a client component because it uses the microphone.</p>
+
+    <h4>Server Actions</h4>
+    <p>Files marked <code>'use server'</code> expose functions the client can call like a normal <code>await</code>, but they execute on the server. This is how the browser safely triggers database writes (e.g. <code>addToSessionHistory</code>, <code>createCompanion</code>) without exposing DB credentials.</p>
+
+    <h4>Row-Level Security (RLS)</h4>
+    <p>Authorization lives <i>in Postgres</i>, not just in app code. Even if a query forgot a <code>.eq('user_id', …)</code>, RLS would still restrict rows to the current user. The policies key off the Clerk <code>sub</code> claim.</p>
+
+    <div class="twrap">
+      <table>
+        <thead><tr><th>Dependency</th><th>Why it’s here</th></tr></thead>
+        <tbody>
+          <tr><td><code>next</code> / <code>react</code></td><td>The framework (App Router, Server Components/Actions) and UI library.</td></tr>
+          <tr><td><code>@clerk/nextjs</code></td><td>Auth components, <code>auth()</code>/<code>currentUser()</code>, middleware, billing (<code>PricingTable</code>).</td></tr>
+          <tr><td><code>@supabase/supabase-js</code></td><td>The Postgres/PostgREST client used in server actions.</td></tr>
+          <tr><td><code>@vapi-ai/web</code></td><td>Browser SDK for the live voice call.</td></tr>
+          <tr><td><code>react-hook-form</code> + <code>zod</code> + <code>@hookform/resolvers</code></td><td>Form state + schema validation for the companion builder.</td></tr>
+          <tr><td><code>lottie-react</code></td><td>The animated soundwave while the tutor speaks (<code>soundwaves.json</code>).</td></tr>
+          <tr><td><code>tailwindcss</code> + shadcn/ui (<code>@radix-ui/*</code>)</td><td>Styling and accessible UI primitives (Select, Accordion, Table, Form).</td></tr>
+          <tr><td><code>@sentry/nextjs</code></td><td>Error monitoring (wraps <code>next.config.ts</code>).</td></tr>
+          <tr><td><code>@jsmastery/utils</code></td><td><code>formUrlQuery</code> helpers for the search/filter URL params.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="call warn"><span class="lbl">Gotcha in next.config.ts</span><p>The config sets <code>typescript.ignoreBuildErrors: true</code> and <code>eslint.ignoreDuringBuilds: true</code>. That means production builds won’t fail on type/lint errors — convenient, but it also means <code>tsc</code>/lint won’t catch mistakes at build time. Run them manually.</p></div>
+    <a class="backtop" href="#big-picture">↑ back to top</a>
+  </section>
+
+  <!-- 11 -->
+  <section class="doc" id="env">
+    <span class="sec-num">11</span>
+    <h2 class="sec">Environment variables reference</h2>
+    <p><code>NEXT_PUBLIC_</code> variables are exposed to the browser (safe, public keys). Everything else is server-only (secret).</p>
+    <div class="twrap">
+      <table>
+        <thead><tr><th>Variable</th><th>Used by</th><th>Where</th></tr></thead>
+        <tbody>
+          <tr><td><code>NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY</code></td><td><span class="svc clerk">Clerk</span> client</td><td><code>.env</code></td></tr>
+          <tr><td><code>CLERK_SECRET_KEY</code></td><td><span class="svc clerk">Clerk</span> server (secret)</td><td><code>.env</code></td></tr>
+          <tr><td><code>NEXT_PUBLIC_CLERK_SIGN_IN_URL</code> / <code>…SIGN_UP_URL</code></td><td>Clerk route config</td><td><code>.env</code></td></tr>
+          <tr><td><code>NEXT_PUBLIC_SUPABASE_URL</code></td><td><span class="svc supabase">Supabase</span> project URL</td><td><code>.env.local</code></td></tr>
+          <tr><td><code>NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</code></td><td><span class="svc supabase">Supabase</span> API key</td><td><code>.env.local</code></td></tr>
+          <tr><td><code>NEXT_PUBLIC_VAPI_WEB_TOKEN</code></td><td><span class="svc vapi">Vapi</span> browser client</td><td><code>.env</code> (needed for voice)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="call key"><span class="lbl">One dashboard step that isn’t in code</span><p>For Supabase to trust Clerk’s tokens, Clerk is registered as a <b>Third-Party Auth provider</b> in the Supabase dashboard (using the Clerk domain, e.g. <code>sure-piranha-43.clerk.accounts.dev</code>), and the Supabase integration is enabled in the Clerk dashboard. That configuration is what makes the whole Clerk→Supabase chain work — nothing in the repo shows it.</p></div>
+  </section>
+
+  <hr>
+  <footer>
+    Converso architecture guide · Next.js (App Router) + Clerk + Supabase + Vapi<br>
+    Read it top-to-bottom to learn the project from scratch.
+  </footer>
+
+</div>

@@ -1,0 +1,552 @@
+<title>تقرير الإصلاحات — Converso</title>
+
+<style>
+  :root {
+    --bg: #f7f4ef;
+    --surface: #fffdfa;
+    --surface-2: #f0ebe2;
+    --ink: #211d18;
+    --ink-2: #5c554c;
+    --ink-3: #8d8479;
+    --border: #e6ded2;
+    --border-strong: #d8cdbd;
+    --accent: #fe5933;
+    --red: #c0392b;
+    --red-tint: #fbeeec;
+    --amber: #a5741d;
+    --amber-tint: #f8f1e2;
+    --green: #2c8862;
+    --green-tint: #e9f5ef;
+    --code-bg: #f2ede4;
+    --code-ink: #2c2822;
+    --shadow: 0 1px 2px rgba(33, 29, 24, .04), 0 8px 24px rgba(33, 29, 24, .05);
+    --sans: "SF Arabic", "Geeza Pro", "Noto Sans Arabic", "Segoe UI", Tahoma, system-ui, sans-serif;
+    --mono: "SF Mono", "JetBrains Mono", "Fira Code", ui-monospace, Menlo, Consolas, monospace;
+    color-scheme: light dark;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #17140f;
+      --surface: #201c16;
+      --surface-2: #272219;
+      --ink: #f2ece1;
+      --ink-2: #bcb3a5;
+      --ink-3: #8a8175;
+      --border: #332d23;
+      --border-strong: #40382c;
+      --accent: #ff6f4b;
+      --red: #ea7565;
+      --red-tint: #2a1b18;
+      --amber: #d8a552;
+      --amber-tint: #292115;
+      --green: #57c193;
+      --green-tint: #16241d;
+      --code-bg: #14110c;
+      --code-ink: #e9e2d5;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 10px 30px rgba(0, 0, 0, .35);
+    }
+  }
+
+  :root[data-theme="light"] {
+    --bg: #f7f4ef; --surface: #fffdfa; --surface-2: #f0ebe2;
+    --ink: #211d18; --ink-2: #5c554c; --ink-3: #8d8479;
+    --border: #e6ded2; --border-strong: #d8cdbd; --accent: #fe5933;
+    --red: #c0392b; --red-tint: #fbeeec; --amber: #a5741d; --amber-tint: #f8f1e2;
+    --green: #2c8862; --green-tint: #e9f5ef; --code-bg: #f2ede4; --code-ink: #2c2822;
+    --shadow: 0 1px 2px rgba(33,29,24,.04), 0 8px 24px rgba(33,29,24,.05);
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #17140f; --surface: #201c16; --surface-2: #272219;
+    --ink: #f2ece1; --ink-2: #bcb3a5; --ink-3: #8a8175;
+    --border: #332d23; --border-strong: #40382c; --accent: #ff6f4b;
+    --red: #ea7565; --red-tint: #2a1b18; --amber: #d8a552; --amber-tint: #292115;
+    --green: #57c193; --green-tint: #16241d; --code-bg: #14110c; --code-ink: #e9e2d5;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.85;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: clamp(2rem, 5vw, 4.5rem) clamp(1.1rem, 4vw, 2rem) 5rem;
+  }
+
+  .tt {
+    font-family: var(--mono);
+    font-size: .88em;
+    direction: ltr;
+    unicode-bidi: isolate;
+    background: var(--code-bg);
+    color: var(--code-ink);
+    padding: .08em .4em;
+    border-radius: .35rem;
+    border: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  /* ---------- header ---------- */
+  .hero { margin-bottom: 3.25rem; }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: .55rem;
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .01em;
+    color: var(--accent);
+    margin-bottom: 1.1rem;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 1.6rem;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  .title {
+    font-size: clamp(1.85rem, 5.5vw, 2.6rem);
+    font-weight: 800;
+    line-height: 1.3;
+    letter-spacing: -.01em;
+    text-wrap: balance;
+    margin: 0 0 .9rem;
+  }
+  .title b { color: var(--accent); font-weight: 800; }
+
+  .lede {
+    font-size: clamp(1.02rem, 2.4vw, 1.18rem);
+    color: var(--ink-2);
+    max-width: 60ch;
+    margin: 0 0 1.7rem;
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .55rem;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    font-size: .82rem;
+    color: var(--ink-2);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: .38rem .8rem;
+  }
+  .chip .tt { background: transparent; border: 0; padding: 0; color: var(--ink); }
+  .dot { width: .5rem; height: .5rem; border-radius: 50%; background: var(--accent); flex: none; }
+
+  /* ---------- section heading ---------- */
+  .sec-head {
+    display: flex;
+    align-items: baseline;
+    gap: .8rem;
+    margin: 3.5rem 0 1.4rem;
+  }
+  .sec-head h2 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--ink-3);
+    white-space: nowrap;
+  }
+  .sec-head .rule { flex: 1; height: 1px; background: var(--border); }
+
+  /* ---------- fix card ---------- */
+  .stack { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 1.1rem;
+    padding: clamp(1.2rem, 3.5vw, 1.9rem);
+    box-shadow: var(--shadow);
+  }
+
+  .card__head {
+    display: flex;
+    align-items: center;
+    gap: .9rem;
+    margin-bottom: 1.3rem;
+  }
+  .num {
+    flex: none;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: .8rem;
+    background: var(--accent);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 1rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .card__title {
+    flex: 1;
+    font-size: clamp(1.12rem, 3vw, 1.32rem);
+    font-weight: 700;
+    line-height: 1.4;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .tag {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .74rem;
+    font-weight: 700;
+    color: var(--green);
+    background: var(--green-tint);
+    border: 1px solid color-mix(in srgb, var(--green) 30%, transparent);
+    border-radius: 999px;
+    padding: .3rem .7rem;
+    white-space: nowrap;
+  }
+  .tag::before { content: "✓"; font-size: .8em; }
+
+  /* labelled field: problem / cause / fix */
+  .fields { display: flex; flex-direction: column; gap: .9rem; }
+
+  .field {
+    border-inline-start: 3px solid var(--f, var(--border-strong));
+    background: var(--ft, var(--surface-2));
+    border-radius: .2rem .7rem .7rem .2rem;
+    padding: .85rem 1.1rem;
+  }
+  .field--problem { --f: var(--red); --ft: var(--red-tint); }
+  .field--cause   { --f: var(--amber); --ft: var(--amber-tint); }
+  .field--fix     { --f: var(--green); --ft: var(--green-tint); }
+
+  .field__label {
+    display: block;
+    font-size: .78rem;
+    font-weight: 700;
+    margin-bottom: .3rem;
+    color: var(--fc, var(--ink-2));
+  }
+  .field--problem .field__label { color: var(--red); }
+  .field--cause .field__label { color: var(--amber); }
+  .field--fix .field__label { color: var(--green); }
+
+  .field p { margin: 0; color: var(--ink); font-size: .98rem; }
+  .field p + p { margin-top: .55rem; }
+
+  ol.steps, ul.list {
+    margin: .5rem 0 0;
+    padding-inline-start: 1.3rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+  }
+  ol.steps li, ul.list li { color: var(--ink); font-size: .97rem; }
+  ol.steps li::marker { color: var(--green); font-weight: 700; }
+  ul.list li::marker { color: var(--ink-3); }
+
+  /* code / error blocks */
+  .pre {
+    direction: ltr;
+    text-align: left;
+    unicode-bidi: isolate;
+    font-family: var(--mono);
+    font-size: .82rem;
+    line-height: 1.65;
+    background: var(--code-bg);
+    color: var(--code-ink);
+    border: 1px solid var(--border);
+    border-radius: .6rem;
+    padding: .8rem 1rem;
+    margin: .7rem 0 0;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .pre .err { color: var(--red); }
+  .pre .ok { color: var(--green); }
+  .pre .dim { color: var(--ink-3); }
+
+  .files {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--border);
+  }
+  .files .lbl { font-size: .78rem; color: var(--ink-3); font-weight: 700; margin-inline-end: .2rem; align-self: center; }
+
+  /* remaining issues callout */
+  .callout {
+    background: var(--amber-tint);
+    border: 1px solid color-mix(in srgb, var(--amber) 35%, transparent);
+    border-radius: 1.1rem;
+    padding: clamp(1.2rem, 3.5vw, 1.7rem);
+  }
+  .callout h3 {
+    display: flex; align-items: center; gap: .5rem;
+    margin: 0 0 1rem; font-size: 1.05rem; color: var(--amber);
+  }
+  .callout .item { margin-bottom: 1rem; }
+  .callout .item:last-child { margin-bottom: 0; }
+  .callout .item h4 { margin: 0 0 .3rem; font-size: 1rem; font-weight: 700; }
+  .callout .item p { margin: 0; color: var(--ink-2); font-size: .95rem; }
+
+  /* closing summary */
+  .summary {
+    margin-top: 2.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 1.1rem;
+    padding: clamp(1.3rem, 3.5vw, 1.9rem);
+    box-shadow: var(--shadow);
+  }
+  .summary h3 { margin: 0 0 1rem; font-size: 1.05rem; }
+  .status-row { display: flex; flex-direction: column; gap: .7rem; }
+  .status {
+    display: flex; align-items: center; gap: .7rem;
+    font-size: .98rem;
+  }
+  .status .badge {
+    flex: none; width: 1.4rem; height: 1.4rem; border-radius: 50%;
+    display: grid; place-items: center; font-size: .8rem; font-weight: 700;
+  }
+  .status.done .badge { background: var(--green-tint); color: var(--green); border: 1px solid color-mix(in srgb, var(--green) 35%, transparent); }
+  .status.todo .badge { background: var(--amber-tint); color: var(--amber); border: 1px solid color-mix(in srgb, var(--amber) 35%, transparent); }
+
+  footer {
+    margin-top: 2.5rem;
+    text-align: center;
+    color: var(--ink-3);
+    font-size: .82rem;
+  }
+
+  a { color: var(--accent); }
+  a:focus-visible, .card:focus-within { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  /* subtle entrance */
+  @media (prefers-reduced-motion: no-preference) {
+    .card, .callout, .summary { animation: rise .5s cubic-bezier(.2,.7,.3,1) both; }
+    .card:nth-child(2) { animation-delay: .05s; }
+    .card:nth-child(3) { animation-delay: .1s; }
+    .card:nth-child(4) { animation-delay: .15s; }
+    @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  }
+</style>
+
+<div class="page" dir="rtl" lang="ar">
+
+  <header class="hero">
+    <span class="eyebrow">تقرير تقني — ملخّص الإصلاحات</span>
+    <h1 class="title">المشاكل التي واجهت مشروع <b>Converso</b> وكيف تمّ حلّها</h1>
+    <p class="lede">شرح مبسّط لكل مشكلة ظهرت أثناء إعداد التطبيق: ما هي، وما سببها الحقيقي، وكيف تمّ إصلاحها خطوة بخطوة.</p>
+    <div class="meta">
+      <span class="chip"><span class="dot"></span> المشروع: <span class="tt">Converso</span> (Next.js)</span>
+      <span class="chip">المصادقة: <span class="tt">Clerk</span></span>
+      <span class="chip">قاعدة البيانات: <span class="tt">Supabase</span></span>
+      <span class="chip">يوليو ٢٠٢٦</span>
+    </div>
+  </header>
+
+  <div class="sec-head">
+    <h2>المشاكل التي تمّ إصلاحها</h2>
+    <span class="rule"></span>
+  </div>
+
+  <div class="stack">
+
+    <!-- 01 -->
+    <article class="card" tabindex="0">
+      <div class="card__head">
+        <span class="num">01</span>
+        <h3 class="card__title">إعداد مصادقة Clerk (كان يعمل بوضع «بدون مفاتيح»)</h3>
+        <span class="tag">تمّ الإصلاح</span>
+      </div>
+      <div class="fields">
+        <div class="field field--problem">
+          <span class="field__label">المشكلة</span>
+          <p>كان التطبيق يعمل في «الوضع بدون مفاتيح» (<span class="tt">keyless mode</span>) وملف <span class="tt">.env</span> فارغاً، أي أنه لم يكن مرتبطاً بحساب <span class="tt">Clerk</span> حقيقي، فلا يمكن تسجيل الدخول فعلياً.</p>
+        </div>
+        <div class="field field--cause">
+          <span class="field__label">السبب</span>
+          <p>لم تكن مفاتيح <span class="tt">Clerk</span> (المفتاح العام والسرّي) مضبوطة، وكان المشروع يعتمد على مفاتيح تجريبية مؤقتة أنشأها <span class="tt">Clerk</span> تلقائياً.</p>
+        </div>
+        <div class="field field--fix">
+          <span class="field__label">الحل</span>
+          <ol class="steps">
+            <li>تثبيت أداة <span class="tt">Clerk CLI</span> عبر <span class="tt">npm install -g clerk</span>.</li>
+            <li>تسجيل الدخول إلى الحساب عبر <span class="tt">clerk auth login</span>.</li>
+            <li>تشغيل <span class="tt">clerk init</span> الذي ربط المشروع بتطبيق <span class="tt">Clerk</span> حقيقي باسم <span class="tt">jsm_saas_app</span>، وكتب المفاتيح في <span class="tt">.env</span>، وأنشأ صفحة التسجيل <span class="tt">sign-up</span>.</li>
+          </ol>
+        </div>
+      </div>
+      <div class="files">
+        <span class="lbl">ملفات:</span>
+        <span class="tt">.env</span><span class="tt">middleware.ts</span><span class="tt">app/layout.tsx</span>
+      </div>
+    </article>
+
+    <!-- 02 -->
+    <article class="card" tabindex="0">
+      <div class="card__head">
+        <span class="num">02</span>
+        <h3 class="card__title">تعطُّل الصفحة الرئيسية: «supabaseUrl is required»</h3>
+        <span class="tag">تمّ الإصلاح</span>
+      </div>
+      <div class="fields">
+        <div class="field field--problem">
+          <span class="field__label">المشكلة</span>
+          <p>كانت الصفحة الرئيسية تتعطّل فور فتح التطبيق برسالة الخطأ:</p>
+          <pre class="pre"><span class="err">Error: supabaseUrl is required.</span>
+  at createSupabaseClient (lib/supabase.ts:5)</pre>
+        </div>
+        <div class="field field--cause">
+          <span class="field__label">السبب</span>
+          <p>متغيّرات بيئة <span class="tt">Supabase</span> لم تكن موجودة أصلاً. والأهم: الكود في <span class="tt">lib/supabase.ts</span> كان يقرأ اسم متغيّر خاطئ (<span class="tt">NEXT_PUBLIC_SUPABASE_ANON_KEY</span>)، بينما قيمة المفتاح لديك موجودة تحت اسم مختلف (<span class="tt">NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</span>).</p>
+        </div>
+        <div class="field field--fix">
+          <span class="field__label">الحل</span>
+          <ol class="steps">
+            <li>إنشاء ملف <span class="tt">.env.local</span> يحتوي رابط المشروع والمفتاح العام (<span class="tt">Publishable Key</span>).</li>
+            <li>تعديل <span class="tt">lib/supabase.ts</span> ليقرأ الاسم الصحيح <span class="tt">NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</span>.</li>
+          </ol>
+        </div>
+      </div>
+      <div class="files">
+        <span class="lbl">ملفات:</span>
+        <span class="tt">.env.local</span><span class="tt">lib/supabase.ts</span>
+      </div>
+    </article>
+
+    <!-- 03 -->
+    <article class="card" tabindex="0">
+      <div class="card__head">
+        <span class="num">03</span>
+        <h3 class="card__title">خطأ بعد تسجيل الدخول: «No suitable key or wrong key type»</h3>
+        <span class="tag">تمّ الإصلاح</span>
+      </div>
+      <div class="fields">
+        <div class="field field--problem">
+          <span class="field__label">المشكلة</span>
+          <p>عند <b>تسجيل الدخول</b>، كانت صفحة الرفقاء والصفحة الرئيسية تتعطّلان بالخطأ التالي — بينما كان كل شيء يعمل عند عدم تسجيل الدخول:</p>
+          <pre class="pre"><span class="err">Error: No suitable key or wrong key type</span>
+  at getAllCompanions (lib/actions/companion.actions.ts:39)</pre>
+        </div>
+        <div class="field field--cause">
+          <span class="field__label">السبب</span>
+          <p>عند تسجيل الدخول، يرسل التطبيق «توكن» <span class="tt">Clerk</span> إلى <span class="tt">Supabase</span> للتحقق. لكن مشروع <span class="tt">Supabase</span> كان يثق بـ<b>نطاق Clerk قديم</b> بينما أصبح التطبيق يستخدم <b>نطاقاً جديداً</b>، فلم تجد <span class="tt">Supabase</span> مفتاحاً للتحقق من التوكن.</p>
+          <pre class="pre"><span class="dim"># النطاق الذي كانت تثق به Supabase (قديم)</span>
+accepted-buffalo-35.clerk.accounts.dev
+<span class="dim"># النطاق الذي يستخدمه التطبيق فعلياً (جديد)</span>
+sure-piranha-43.clerk.accounts.dev</pre>
+        </div>
+        <div class="field field--fix">
+          <span class="field__label">الحل</span>
+          <ol class="steps">
+            <li>في لوحة تحكم <span class="tt">Clerk</span>: تفعيل تكامل <span class="tt">Supabase</span> (يضيف «مطالبة الدور» <span class="tt">role claim</span> إلى التوكن)، ونسخ نطاق <span class="tt">Clerk</span> الصحيح.</li>
+            <li>في لوحة تحكم <span class="tt">Supabase</span> ← <span class="tt">Authentication</span> ← <span class="tt">Third-Party Auth</span>: إضافة مزوّد <span class="tt">Clerk</span> بالنطاق الصحيح <span class="tt">sure-piranha-43.clerk.accounts.dev</span>.</li>
+          </ol>
+          <p>النتيجة بعد الإصلاح — تحوّل الطلب من فشل إلى نجاح:</p>
+          <pre class="pre"><span class="err">GET /companions 500</span>  <span class="dim">← قبل</span>
+<span class="ok">GET /companions 200</span>  <span class="dim">← بعد</span></pre>
+        </div>
+      </div>
+      <div class="files">
+        <span class="lbl">أُنجز في:</span>
+        <span class="tt">Clerk Dashboard</span><span class="tt">Supabase Dashboard</span>
+      </div>
+    </article>
+
+    <!-- 04 -->
+    <article class="card" tabindex="0">
+      <div class="card__head">
+        <span class="num">04</span>
+        <h3 class="card__title">بطء التنقّل بين الصفحات (تجربة المستخدم)</h3>
+        <span class="tag">تمّ الإصلاح</span>
+      </div>
+      <div class="fields">
+        <div class="field field--problem">
+          <span class="field__label">المشكلة</span>
+          <p>عند الضغط على أي رابط أو زر للانتقال، كان هناك تأخير بحدود ثانية قبل ظهور الصفحة الجديدة — وكأن الضغطة لم تُسجَّل.</p>
+        </div>
+        <div class="field field--cause">
+          <span class="field__label">الأسباب</span>
+          <ul class="list">
+            <li>لا توجد ملفات <span class="tt">loading.tsx</span>، فتبقى الصفحة القديمة «مجمّدة» حتى ينتهي الخادم من جلب البيانات (لا يوجد مؤشّر تحميل فوري).</li>
+            <li>جلب البيانات كان متسلسلاً (واحداً تلو الآخر) بدل التوازي.</li>
+            <li>رابط «My Journey» كان خاطئاً (<span class="tt">my-journey</span> بدون <span class="tt">/</span>)، فيؤدي أحياناً لمسار خاطئ.</li>
+            <li>تسريب في مؤقّت البحث (<span class="tt">debounce</span>) يُطلق طلب تنقّل جديد مع كل ضغطة زر.</li>
+            <li>زر «Build a New Companion» كان <span class="tt">&lt;button&gt;</span> يحيط بـ<span class="tt">&lt;Link&gt;</span>، ما يمنع التحميل المسبق (<span class="tt">prefetch</span>).</li>
+          </ul>
+        </div>
+        <div class="field field--fix">
+          <span class="field__label">الحلول</span>
+          <ul class="list">
+            <li>إضافة «هياكل تحميل» (<span class="tt">loading skeletons</span>) لكل صفحة ← انتقال فوري مع بقاء القائمة العلوية ثابتة.</li>
+            <li>جلب البيانات بالتوازي عبر <span class="tt">Promise.all</span>.</li>
+            <li>تصحيح رابط «My Journey» إلى <span class="tt">/my-journey</span>.</li>
+            <li>إصلاح البحث: تنظيف المؤقّت + <span class="tt">useTransition</span> + مؤشّر تحميل صغير.</li>
+            <li>تحويل زر الإنشاء إلى رابط قابل للتحميل المسبق، وإضافة حالة «جارٍ الإنشاء…» للزر.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="files">
+        <span class="lbl">ملفات:</span>
+        <span class="tt">app/loading.tsx</span><span class="tt">app/companions/loading.tsx</span><span class="tt">NavItems.tsx</span><span class="tt">SearchInput.tsx</span><span class="tt">CTA.tsx</span>
+      </div>
+    </article>
+
+  </div>
+
+  <!-- remaining -->
+  <div class="sec-head">
+    <h2>نقاط تحتاج انتباهك</h2>
+    <span class="rule"></span>
+  </div>
+
+  <div class="callout">
+    <h3>⚠ مشكلتان متبقّيتان (منفصلتان عمّا سبق)</h3>
+    <div class="item">
+      <h4>١. خطأ مؤقّت «JWT not yet valid»</h4>
+      <p>سببه فرق بسيط في توقيت الساعة بين <span class="tt">Clerk</span> و<span class="tt">Supabase</span> (<span class="tt">clock skew</span>). يظهر أحياناً ويختفي عند إعادة تحميل الصفحة. إن تكرّر كثيراً فالحل هو مزامنة ساعة الجهاز.</p>
+    </div>
+    <div class="item">
+      <h4>٢. جدول «bookmarks» مفقود في قاعدة البيانات</h4>
+      <p>صفحة «My Journey» تتعطّل لأن قاعدة بيانات <span class="tt">Supabase</span> تنقصها جداول (<span class="tt">bookmarks</span> وربما <span class="tt">session_history</span>). جدول <span class="tt">companions</span> موجود ويعمل، لكن يلزم إنشاء الجداول الناقصة لتعمل صفحة الرحلة والإشارات المرجعية.</p>
+    </div>
+  </div>
+
+  <!-- summary -->
+  <div class="summary">
+    <h3>الخلاصة — حالة التطبيق الآن</h3>
+    <div class="status-row">
+      <div class="status done"><span class="badge">✓</span> مصادقة <span class="tt">Clerk</span> تعمل (تسجيل الدخول والتسجيل).</div>
+      <div class="status done"><span class="badge">✓</span> قراءة بيانات <span class="tt">Supabase</span> تعمل بعد تسجيل الدخول.</div>
+      <div class="status done"><span class="badge">✓</span> التنقّل بين الصفحات أصبح سلساً وفورياً.</div>
+      <div class="status todo"><span class="badge">!</span> يتبقّى: إنشاء الجداول الناقصة في <span class="tt">Supabase</span>.</div>
+    </div>
+  </div>
+
+  <footer>
+    تقرير إصلاحات مشروع Converso · أُعدّ لتوثيق ما تمّ إنجازه
+  </footer>
+
+</div>
